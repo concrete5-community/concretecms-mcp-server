@@ -1,3 +1,5 @@
+[![Build](https://github.com/MacareuxDigital/concretecms-mcp-server/actions/workflows/build.yml/badge.svg)](https://github.com/MacareuxDigital/concretecms-mcp-server/actions/workflows/build.yml)
+
 # Concrete CMS MCP Server
 
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for [Concrete CMS](https://www.concretecms.org) built with TypeScript.
