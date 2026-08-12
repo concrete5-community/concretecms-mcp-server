@@ -59,10 +59,18 @@ export async function performOAuthFlow(authProvider: UserTokenSession): Promise<
             <html>
             <head>
               <title>Authorization Successful</title>
+              <script>
+                setTimeout(() => {
+                  try {
+                      window.close();
+                  } catch {
+                  }
+                }, 3000);
+              </script>
             </head>
             <body>
               <h1>Authorization Successful!</h1>
-              <p>You can close this window and return to the application.</p>
+              <p>Return to the application (this page can be closed).</p>
             </body>
             </html>
           `)
