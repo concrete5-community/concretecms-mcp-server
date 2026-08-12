@@ -27,9 +27,8 @@ export class CmsApiClient {
   }
 
   private buildUrl(path: string, query?: Record<string, string | undefined>): URL {
-    const base = canonical_url.replace(/\/$/, '')
     const normalizedPath = path.startsWith('/') ? path : `/${path}`
-    const url = new URL(`${base}${normalizedPath}`)
+    const url = new URL(`${canonical_url}${normalizedPath}`)
 
     if (query) {
       for (const [key, value] of Object.entries(query)) {
