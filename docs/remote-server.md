@@ -364,7 +364,7 @@ Choose an installation directory on your server, for example `/opt/concretecms-m
 sudo mkdir -p /opt/concretecms-mcp
 sudo chown mcp:mcp /opt/concretecms-mcp
 cd /opt/concretecms-mcp
-git clone https://github.com/MacareuxDigital/concretecms-mcp-server.git .
+git clone https://github.com/concrete5-community/concretecms-mcp-server.git .
 npm ci && npm run build
 ```
 
