@@ -52,7 +52,24 @@ function prefixedPath(segment: string, envName: string, pathPrefix: string): str
 export const canonical_url = requireEnv('CONCRETE_CANONICAL_URL').replace(/\/+$/, '')
 export const client_id = requireEnv('CONCRETE_API_CLIENT_ID')
 export const client_secret = requireEnv('CONCRETE_API_CLIENT_SECRET')
-export const scope = requireEnv('CONCRETE_API_SCOPE')
+
+// This server is a plain OAuth2 API client and never consumes the OIDC ID token.
+// Requesting the `openid` scope makes Concrete issue an ID token whose claims do
+// not satisfy openid-client's strict validation (e.g. `aud` is an internal UUID
+// rather than the client_id), which aborts the whole authorization code exchange.
+// Drop it — only the Concrete API scopes actually grant access to the REST API.
+function sanitizeScope(rawScope: string): string {
+  const requested = rawScope.split(/\s+/).filter(Boolean)
+  const kept = requested.filter((s) => s.toLowerCase() !== 'openid')
+  if (kept.length !== requested.length) {
+    console.error(
+      '[concretecms-mcp] Ignoring the "openid" scope: this server does not use OIDC ID tokens, and Concrete\'s ID token fails standard validation.'
+    )
+  }
+  return kept.join(' ')
+}
+
+export const scope = sanitizeScope(requireEnv('CONCRETE_API_SCOPE'))
 
 export type TransportType = 'stdio' | 'http'
 
