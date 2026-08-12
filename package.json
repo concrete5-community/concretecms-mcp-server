@@ -6,6 +6,8 @@
   "bin": "dist/index.js",
   "scripts": {
     "build": "tsc",
+    "prepack": "npm run build",
+    "pack": "npx mcpb pack . concretecms-mcp-server.mcpb",
     "prestart": "npm run build",
     "start": "node dist/index.js",
     "watch": "tsc --watch",
