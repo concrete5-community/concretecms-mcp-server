@@ -7,7 +7,7 @@ function requireEnv(name: string): string {
 }
 
 function optionalEnv(name: string, defaultValue: string): string {
-  return process.env[name] ?? defaultValue
+  return process.env[name] || defaultValue
 }
 
 function optionalIntEnv(name: string, defaultValue: number): number {
@@ -77,7 +77,7 @@ export const publicBaseUrl = (() => {
     return normalizeBaseUrl(url)
   }
 
-  return normalizeBaseUrl(url ?? `http://localhost:${httpPort}`)
+  return normalizeBaseUrl(url || `http://localhost:${httpPort}`)
 })()
 
 export const oauthRedirectUri = `${publicBaseUrl}${oauthCallbackPath}`
@@ -113,7 +113,7 @@ function parseMcpApiKeys(): McpApiKeyEntry[] {
 
 export const mcpApiKeys = parseMcpApiKeys()
 
-export const tokenEncryptionKey = process.env.TOKEN_ENCRYPTION_KEY ?? null
+export const tokenEncryptionKey = process.env.TOKEN_ENCRYPTION_KEY || null
 
 export const oauthDebug = (() => {
   const value = process.env.OAUTH_DEBUG
