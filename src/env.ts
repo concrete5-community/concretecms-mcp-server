@@ -24,6 +24,17 @@ function optionalIntEnv(name: string, defaultValue: number): number {
   return parsed
 }
 
+function optionalBoolEnv(name: string, defaultValue: boolean): boolean {
+  const value = process.env[name]
+  if (value === '1' || value === 'true') {
+    return true
+  }
+  if (value === '0' || value === 'false') {
+    return false
+  }
+  return defaultValue
+}
+
 export function normalizePathPrefix(prefix: string): string {
   if (!prefix || prefix === '/') {
     return ''
@@ -115,16 +126,13 @@ export const mcpApiKeys = parseMcpApiKeys()
 
 export const tokenEncryptionKey = process.env.TOKEN_ENCRYPTION_KEY || null
 
-export const oauthDebug = (() => {
-  const value = process.env.OAUTH_DEBUG
-  if (value === '1' || value === 'true') {
-    return true
-  }
-  if (value === '0' || value === 'false') {
-    return false
-  }
-  return false
-})()
+export const oauthDebug = optionalBoolEnv('OAUTH_DEBUG', false)
+
+// Allow the Concrete server to be reached over plain HTTP. openid-client v6
+// rejects non-HTTPS requests with OAUTH_HTTP_REQUEST_FORBIDDEN before OAuth
+// discovery even starts, so this must be opt-in for local/dev instances served
+// over HTTP. Never enable it against a production server.
+export const allowInsecureHttp = optionalBoolEnv('CONCRETE_ALLOW_INSECURE_HTTP', false)
 
 let stdioEncryptionWarningShown = false
 
