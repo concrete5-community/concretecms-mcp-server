@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/refs/heads/main/schemas/mcpb-manifest-v0.2.schema.json",
   "manifest_version": "0.2",
   "name": "concretecms-mcp-server",
-  "display_name": "ConcreteCMS MCP Server by MacareuxDigital",
+  "display_name": "ConcreteCMS MCP Server",
   "version": "1.0.0",
   "description": "A Model Context Protocol (MCP) server that integrates with Concrete CMS's REST API",
   "author": {
@@ -11,11 +11,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/MacareuxDigital/concretecms-mcp-server.git"
+    "url": "https://github.com/concrete5-community/concretecms-mcp-server.git"
   },
-  "homepage": "https://github.com/MacareuxDigital/concretecms-mcp-server",
-  "documentation": "https://github.com/MacareuxDigital/concretecms-mcp-server/blob/main/README.md",
-  "support": "https://github.com/MacareuxDigital/concretecms-mcp-server/issues",
+  "homepage": "https://github.com/concrete5-community/concretecms-mcp-server",
+  "documentation": "https://github.com/concrete5-community/concretecms-mcp-server/blob/main/README.md",
+  "support": "https://github.com/concrete5-community/concretecms-mcp-server/issues",
   "server": {
     "type": "node",
     "entry_point": "dist/index.js",

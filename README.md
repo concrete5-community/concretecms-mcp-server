@@ -1,4 +1,4 @@
-[![Build](https://github.com/MacareuxDigital/concretecms-mcp-server/actions/workflows/build.yml/badge.svg)](https://github.com/MacareuxDigital/concretecms-mcp-server/actions/workflows/build.yml)
+[![Build](https://github.com/concrete5-community/concretecms-mcp-server/actions/workflows/build.yml/badge.svg)](https://github.com/concrete5-community/concretecms-mcp-server/actions/workflows/build.yml)
 
 # Concrete CMS MCP Server
 
@@ -7,7 +7,7 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for [C
 ## Installation
 
 ```bash
-git clone https://github.com/MacareuxDigital/concretecms-mcp-server.git
+git clone https://github.com/concrete5-community/concretecms-mcp-server.git
 cd concretecms-mcp-server
 npm ci && npm run build
 ```
