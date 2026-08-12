@@ -34,3 +34,5 @@ jobs:
         run: npx mcpb validate manifest.json
       - name: Create MCPB file
         run: npx mcpb pack . concretecms-mcp-server.mcpb
+      - name: Inspect MCPB file
+        run: npx mcpb info concretecms-mcp-server.mcpb

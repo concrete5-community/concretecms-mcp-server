@@ -1,0 +1,117 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]*.[0-9]*.[0-9]*'
+      - 'v[0-9]*.[0-9]*.[0-9]*'
+      - 'v.[0-9]*.[0-9]*.[0-9]*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract version from tag
+        id: version
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          if [[ ! "$tag" =~ ^(v\.?)?[0-9]+\.[0-9]+\.[0-9]+.*$ ]]; then
+            echo "Tag '$tag' is not version-like; skipping release."
+            exit 0
+          fi
+          # Strip an optional "v" or "v." prefix.
+          version="${tag#v}"
+          version="${version#.}"
+          # Stable = only numbers separated by dots or hyphens. Anything else
+          # (e.g. a -beta / -rc suffix containing letters) is a prerelease.
+          if [[ "$version" =~ ^[0-9]+([.-][0-9]+)*$ ]]; then
+            prerelease=false
+          else
+            prerelease=true
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
+          echo "Tag '$tag' -> version '$version' (prerelease=$prerelease)"
+
+      - name: Checkout
+        if: steps.version.outputs.version
+        uses: actions/checkout@v7
+
+      - name: Use Node.js 26
+        if: steps.version.outputs.version
+        uses: actions/setup-node@v7
+        with:
+          node-version: '26'
+
+      - name: Install dependencies
+        if: steps.version.outputs.version
+        run: npm ci
+
+      - name: Install mcpb
+        if: steps.version.outputs.version
+        run: npm install -g @anthropic-ai/mcpb
+
+      - name: Set version in manifest.json
+        if: steps.version.outputs.version
+        uses: actions/github-script@v9
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        with:
+          script: |
+            const fs = require('fs');
+            const file = 'manifest.json';
+            const manifest = JSON.parse(fs.readFileSync(file, 'utf8'));
+            manifest.version = process.env.VERSION;
+            fs.writeFileSync(file, JSON.stringify(manifest, null, 2) + '\n');
+            core.info(`Set manifest.json version to ${manifest.version}`);
+
+      - name: Create MCPB package
+        if: steps.version.outputs.version
+        run: npm run pack
+
+      - name: Create GitHub release
+        if: steps.version.outputs.version
+        uses: actions/github-script@v9
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        with:
+          script: |
+            const fs = require('fs');
+            const asset = 'concretecms-mcp-server.mcpb';
+            const tag = context.ref.replace(/^refs\/tags\//, '');
+            const { owner, repo } = context.repo;
+
+            // Release immutability freezes a release once it is published, so the
+            // asset must be attached while the release is still a draft. Create as
+            // draft -> upload the asset -> publish.
+            const release = await github.rest.repos.createRelease({
+              owner,
+              repo,
+              tag_name: tag,
+              name: `v${process.env.VERSION}`,
+              draft: true,
+              prerelease: process.env.PRERELEASE === 'true',
+              generate_release_notes: true,
+            });
+
+            await github.rest.repos.uploadReleaseAsset({
+              owner,
+              repo,
+              release_id: release.data.id,
+              name: asset,
+              data: fs.readFileSync(asset),
+            });
+
+            const published = await github.rest.repos.updateRelease({
+              owner,
+              repo,
+              release_id: release.data.id,
+              draft: false,
+              make_latest: 'true',
+            });
+
+            core.info(`Published release ${published.data.html_url}`);

@@ -4,33 +4,45 @@
 
 A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for [Concrete CMS](https://www.concretecms.org) built with TypeScript.
 
+![Screenshot of a chat with Claude Desktop and a Concrete CMS MCP Server](docs/screenshot.png)
+
 ## Installation
-
-```bash
-git clone https://github.com/concrete5-community/concretecms-mcp-server.git
-cd concretecms-mcp-server
-npm ci && npm run build
-```
-
-## Usage
 
 ### Enable API in Concrete CMS
 
 Since the MCP server uses the Concrete CMS API, you need to enable it in your Concrete CMS installation first.
 Please refer to the [Concrete CMS documentation](https://documentation.concretecms.org/9-x/developers/rest-api/introduction) for more information.
 
-### Connect your LLM to the local Concrete CMS MCP Server
+### Install the MCP Server
 
-#### As Claude Desktop MCPB extension
+#### Via a prebuilt extension
+
+The easiest way to use the Concrete CMS MCP Server with Claude Desktop is to install the prebuilt `.mcpb` extension:
+
+1. Go to the [Releases page](https://github.com/concrete5-community/concretecms-mcp-server/releases) and download the latest `concretecms-mcp-server.mcpb` file.
+2. In Claude Desktop, navigate to *Settings* > *Extensions*.
+3. Click *Advanced settings*.
+4. In the *Extension Developer* section, click the *Install Extension* button and select the downloaded `concretecms-mcp-server.mcpb` file.
+
+Claude Desktop will then ask you for the configuration (Concrete CMS URL, API client ID and secret, and scopes). See [Settings](#settings) below for what to enter.
+
+#### From source
+
+You have to clone this repo and compile it:
+```bash
+git clone https://github.com/concrete5-community/concretecms-mcp-server.git
+cd concretecms-mcp-server
+npm ci && npm run build
+```
+
+If you use Claude Desktop:
 
 1. Navigate to *Settings* > *Extensions*
 2. Click *Advanced settings*
 3. In the *Extension Developer* section, click *Install Unpacked Extension*
 4. Choose the `concretecms-mcp-server` directory
 
-#### Manually (via JSON configuration)
-
-Here's an example configuration for Claude Desktop:
+You can also add this MCP server via JSON. For example:
 
 ```json
 {
@@ -51,7 +63,9 @@ Here's an example configuration for Claude Desktop:
 }
 ```
 
-#### Settings
+## Usage
+
+### Settings
 
 - Set `CONCRETE_CANONICAL_URL` to the URL of your Concrete CMS installation.
 - Set `CONCRETE_API_CLIENT_ID` and `CONCRETE_API_CLIENT_SECRET` to the credentials of a registered API integration.
@@ -63,8 +77,6 @@ Now you should be able to get information about your Concrete CMS in a chat. A r
 Use separate MCP server entries in Claude Desktop for each Concrete CMS site — each site's tokens are stored independently.
 
 Optionally set `TOKEN_ENCRYPTION_KEY` in the `env` block to encrypt tokens at rest. See the **[Security Guide](docs/security.md)** for details.
-
-![Screenshot of a chat with Claude Desktop and a Concrete CMS MCP Server](docs/screenshot.png)
 
 For more information about local MCP servers, please refer to the [Claude Desktop documentation](https://modelcontextprotocol.io/docs/develop/connect-local-servers).
 
