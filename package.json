@@ -25,9 +25,9 @@
   "license": "MIT",
   "description": "",
   "dependencies": {
-    "@ivotoby/openapi-mcp-server": "^1.12.1",
-    "@modelcontextprotocol/sdk": "^1.25.1",
-    "openid-client": "^6.8.1"
+    "@ivotoby/openapi-mcp-server": "^1.16.0",
+    "@modelcontextprotocol/sdk": "^1.30.0",
+    "openid-client": "^6.8.2"
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
