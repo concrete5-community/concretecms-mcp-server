@@ -7,11 +7,11 @@ const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 export const PROJECT_ROOT = join(__dirname, '..')
-export const LEGACY_TOKEN_FILE = process.env.TOKEN_FILE ?? join(PROJECT_ROOT, '.tokens.json')
+export const LEGACY_TOKEN_FILE = process.env.TOKEN_FILE || join(PROJECT_ROOT, '.tokens.json')
 export const OPENAPI_SPEC_FILE = join(PROJECT_ROOT, 'openapi.yml')
 
 export function getTokenBaseDir(): string {
-  return process.env.TOKEN_DIR ?? join(homedir(), '.concretecms-mcp', 'tokens')
+  return process.env.TOKEN_DIR || join(homedir(), '.concretecms-mcp', 'tokens')
 }
 
 export function getSiteKey(): string {
