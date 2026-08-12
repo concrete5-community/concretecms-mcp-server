@@ -3,7 +3,7 @@
   "manifest_version": "0.2",
   "name": "concretecms-mcp-server",
   "display_name": "ConcreteCMS MCP Server",
-  "version": "1.0.0",
+  "version": "0.0.0",
   "description": "A Model Context Protocol (MCP) server that integrates with Concrete CMS's REST API",
   "author": {
     "name": "MacareuxDigital",
