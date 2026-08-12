@@ -1,5 +1,5 @@
 import * as client from 'openid-client'
-import { canonical_url, client_id, client_secret } from '../env.js'
+import { allowInsecureHttp, canonical_url, client_id, client_secret } from '../env.js'
 
 export const server: client.ServerMetadata = {
   issuer: canonical_url,
@@ -12,3 +12,10 @@ export const config: client.Configuration = new client.Configuration(
   client_id,
   client_secret
 )
+
+// openid-client v6 refuses non-HTTPS requests (OAUTH_HTTP_REQUEST_FORBIDDEN).
+// When explicitly opted in, relax that restriction so a Concrete server exposed
+// over plain HTTP (typically a local/dev instance) can be used.
+if (allowInsecureHttp) {
+  client.allowInsecureRequests(config)
+}
