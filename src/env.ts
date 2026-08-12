@@ -38,7 +38,7 @@ function prefixedPath(segment: string, envName: string, pathPrefix: string): str
   return optionalEnv(envName, defaultPath)
 }
 
-export const canonical_url = requireEnv('CONCRETE_CANONICAL_URL')
+export const canonical_url = requireEnv('CONCRETE_CANONICAL_URL').replace(/\/+$/, '')
 export const client_id = requireEnv('CONCRETE_API_CLIENT_ID')
 export const client_secret = requireEnv('CONCRETE_API_CLIENT_SECRET')
 export const scope = requireEnv('CONCRETE_API_SCOPE')

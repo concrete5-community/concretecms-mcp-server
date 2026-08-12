@@ -29,7 +29,7 @@ function extractUserId(body: AccountResponse): number | null {
 export { extractUserId }
 
 export async function resolveCmsUserId(accessToken: string): Promise<number> {
-  const url = `${canonical_url.replace(/\/$/, '')}/ccm/api/1.0/account`
+  const url = `${canonical_url}/ccm/api/1.0/account`
   const response = await fetch(url, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
