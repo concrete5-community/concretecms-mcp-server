@@ -21,6 +21,15 @@ Please refer to the [Concrete CMS documentation](https://documentation.concretec
 
 ### Connect your LLM to the local Concrete CMS MCP Server
 
+#### As Claude Desktop MCPB extension
+
+1. Navigate to *Settings* > *Extensions*
+2. Click *Advanced settings*
+3. In the *Extension Developer* section, click *Install Unpacked Extension*
+4. Choose the `concretecms-mcp-server` directory
+
+#### Manually (via JSON configuration)
+
 Here's an example configuration for Claude Desktop:
 
 ```json
@@ -41,6 +50,8 @@ Here's an example configuration for Claude Desktop:
   }
 }
 ```
+
+#### Settings
 
 - Set `CONCRETE_CANONICAL_URL` to the URL of your Concrete CMS installation.
 - Set `CONCRETE_API_CLIENT_ID` and `CONCRETE_API_CLIENT_SECRET` to the credentials of a registered API integration.

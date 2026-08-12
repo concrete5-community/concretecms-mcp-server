@@ -1,0 +1,26 @@
+# Source & build tooling
+src/
+scripts/
+tsconfig.json
+package-lock.json
+
+# Tests compiled in dist/
+dist/**/*.test.js
+dist/**/*.test.d.ts
+dist/**/*.test.js.map
+
+# Docs & meta
+docs/
+README.md
+LICENSE
+.github/
+.env.example
+.npmrc
+.gitignore
+
+# Docker
+Dockerfile
+docker-compose.yml
+
+# Git
+.git/

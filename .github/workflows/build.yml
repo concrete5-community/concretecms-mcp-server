@@ -28,3 +28,9 @@ jobs:
         run: npm run verify:security
       - name: Check dependency vulnerabilities
         run: npm audit --audit-level=moderate --dry-run
+      - name: Install mcpb
+        run: npm install -g @anthropic-ai/mcpb
+      - name: Validate MCPB manifest.json
+        run: npx mcpb validate manifest.json
+      - name: Create MCPB file
+        run: npx mcpb pack . concretecms-mcp-server.mcpb
