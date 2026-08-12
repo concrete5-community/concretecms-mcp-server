@@ -1,0 +1,205 @@
+{
+  "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/refs/heads/main/schemas/mcpb-manifest-v0.2.schema.json",
+  "manifest_version": "0.2",
+  "name": "concretecms-mcp-server",
+  "display_name": "ConcreteCMS MCP Server by MacareuxDigital",
+  "version": "1.0.0",
+  "description": "A Model Context Protocol (MCP) server that integrates with Concrete CMS's REST API",
+  "author": {
+    "name": "MacareuxDigital",
+    "url": "https://github.com/MacareuxDigital"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MacareuxDigital/concretecms-mcp-server.git"
+  },
+  "homepage": "https://github.com/MacareuxDigital/concretecms-mcp-server",
+  "documentation": "https://github.com/MacareuxDigital/concretecms-mcp-server/blob/main/README.md",
+  "support": "https://github.com/MacareuxDigital/concretecms-mcp-server/issues",
+  "server": {
+    "type": "node",
+    "entry_point": "dist/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": ["${__dirname}/dist/index.js"],
+      "env": {
+        "CONCRETE_CANONICAL_URL": "${user_config.CONCRETE_CANONICAL_URL}",
+        "CONCRETE_API_CLIENT_ID": "${user_config.CONCRETE_API_CLIENT_ID}",
+        "CONCRETE_API_CLIENT_SECRET": "${user_config.CONCRETE_API_CLIENT_SECRET}",
+        "CONCRETE_API_SCOPE": "${user_config.CONCRETE_API_SCOPE}",
+        "TRANSPORT_TYPE": "${user_config.TRANSPORT_TYPE}",
+        "TOKEN_ENCRYPTION_KEY": "${user_config.TOKEN_ENCRYPTION_KEY}",
+        "CONCRETE_USER_ID": "${user_config.CONCRETE_USER_ID}",
+        "PUBLIC_BASE_URL": "${user_config.PUBLIC_BASE_URL}",
+        "MCP_API_KEY": "${user_config.MCP_API_KEY}",
+        "MCP_API_KEYS": "${user_config.MCP_API_KEYS}",
+        "PATH_PREFIX": "${user_config.PATH_PREFIX}",
+        "HTTP_HOST": "${user_config.HTTP_HOST}",
+        "HTTP_PORT": "${user_config.HTTP_PORT}",
+        "TOKEN_DIR": "${user_config.TOKEN_DIR}",
+        "MCP_ENDPOINT_PATH": "${user_config.MCP_ENDPOINT_PATH}",
+        "OAUTH_START_PATH": "${user_config.OAUTH_START_PATH}",
+        "OAUTH_CALLBACK_PATH": "${user_config.OAUTH_CALLBACK_PATH}",
+        "OAUTH_STATUS_PATH": "${user_config.OAUTH_STATUS_PATH}",
+        "OAUTH_REVOKE_PATH": "${user_config.OAUTH_REVOKE_PATH}",
+        "HEALTH_PATH": "${user_config.HEALTH_PATH}",
+        "OAUTH_DEBUG": "${user_config.OAUTH_DEBUG}"
+      }
+    }
+  },
+  "license": "MIT",
+  "user_config": {
+    "CONCRETE_CANONICAL_URL": {
+      "type": "string",
+      "title": "Canonical URL",
+      "description": "The URL of your ConcreteCMS installation",
+      "required": true,
+      "sensitive": false
+    },
+    "CONCRETE_API_CLIENT_ID": {
+      "type": "string",
+      "title": "API Integration Client ID",
+      "description": "The Client ID of your ConcreteCMS integration",
+      "required": true,
+      "sensitive": false
+    },
+    "CONCRETE_API_CLIENT_SECRET": {
+      "type": "string",
+      "title": "API Integration Client Secret",
+      "description": "The Client Secret of your ConcreteCMS integration",
+      "required": true,
+      "sensitive": true
+    },
+    "CONCRETE_API_SCOPE": {
+      "type": "string",
+      "title": "API Integration Client Scopes",
+      "description": "Space-separated list of API Integration Client scopes",
+      "required": true,
+      "sensitive": false
+    },
+    "TRANSPORT_TYPE": {
+      "type": "string",
+      "title": "Transport Type",
+      "description": "The transport type for the MCP server: stdio (local mode) or http (remote mode)",
+      "required": false,
+      "default": "stdio",
+      "sensitive": false
+    },
+    "TOKEN_ENCRYPTION_KEY": {
+      "type": "string",
+      "title": "Token Encryption Key",
+      "description": "A secret key used to encrypt tokens - required for http mode",
+      "required": false,
+      "sensitive": true
+    },
+    "CONCRETE_USER_ID": {
+      "type": "string",
+      "title": "ConcreteCMS User ID (default: local)",
+      "description": "The user key used to store user tokens",
+      "required": false,
+      "sensitive": false
+    },
+    "PUBLIC_BASE_URL": {
+      "type": "string",
+      "title": "Public Base URL",
+      "description": "The public URL of this MCP server (e.g. https://mcp.example.com) - required for http mode",
+      "required": false,
+      "sensitive": false
+    },
+    "MCP_API_KEY": {
+      "type": "string",
+      "title": "MCP API Key",
+      "description": "A Bearer token for MCP clients - required for http mode (alternatively you can use MCP_API_KEYS for per-user authentication)",
+      "required": false,
+      "sensitive": true
+    },
+    "MCP_API_KEYS": {
+      "type": "string",
+      "title": "MCP API Keys",
+      "description": "A JSON map of API keys to CMS user IDs (null = dynamic) - required for http mode (alternatively you can use MCP_API_KEY single-user authentication)",
+      "required": false,
+      "sensitive": true
+    },
+    "PATH_PREFIX": {
+      "type": "string",
+      "title": "Path Prefix",
+      "description": "Path prefix for all routes, e.g. /ccm-mcp",
+      "required": false,
+      "sensitive": false
+    },
+    "HTTP_HOST": {
+      "type": "string",
+      "title": "HTTP Host",
+      "description": "Bind address for the HTTP server",
+      "required": false,
+      "default": "0.0.0.0",
+      "sensitive": false
+    },
+    "HTTP_PORT": {
+      "type": "number",
+      "title": "HTTP Port",
+      "description": "Listen port for the HTTP server",
+      "required": false,
+      "default": 3000,
+      "sensitive": false,
+      "min": 1,
+      "max": 65535
+    },
+    "TOKEN_DIR": {
+      "type": "string",
+      "title": "Token Directory",
+      "description": "Base directory for storing tokens; per-site subdirectories are created automatically (default: ~/.concretecms-mcp/tokens)",
+      "required": false,
+      "sensitive": false
+    },
+    "MCP_ENDPOINT_PATH": {
+      "type": "string",
+      "title": "MCP Endpoint Path",
+      "description": "Streamable HTTP MCP endpoint (default: {PATH_PREFIX}/mcp)",
+      "required": false,
+      "sensitive": false
+    },
+    "OAUTH_START_PATH": {
+      "type": "string",
+      "title": "OAuth start path",
+      "description": "OAuth initiation path (default: {PATH_PREFIX}/oauth/start)",
+      "required": false,
+      "sensitive": false
+    },
+    "OAUTH_CALLBACK_PATH": {
+      "type": "string",
+      "title": "OAuth callback path",
+      "description": "OAuth redirect path (default: {PATH_PREFIX}/oauth/callback)",
+      "required": false,
+      "sensitive": false
+    },
+    "OAUTH_STATUS_PATH": {
+      "type": "string",
+      "title": "OAuth status path",
+      "description": "OAuth status path (default: {PATH_PREFIX}/oauth/status)",
+      "required": false,
+      "sensitive": false
+    },
+    "OAUTH_REVOKE_PATH": {
+      "type": "string",
+      "title": "OAuth revoke path",
+      "description": "Per-user token revocation path (default: {PATH_PREFIX}/oauth/revoke)",
+      "required": false,
+      "sensitive": false
+    },
+    "HEALTH_PATH": {
+      "type": "string",
+      "title": "Health check path",
+      "description": "Health check path (default: {PATH_PREFIX}/health)",
+      "required": false,
+      "sensitive": false
+    },
+    "OAUTH_DEBUG": {
+      "type": "boolean",
+      "title": "OAuth debug mode",
+      "description": "Enable debug logging for OAuth flows (default: false)",
+      "required": false,
+      "sensitive": false
+    }
+  }
+}
