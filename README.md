@@ -11,7 +11,21 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for [C
 ### Enable API in Concrete CMS
 
 Since the MCP server uses the Concrete CMS API, you need to enable it in your Concrete CMS installation first.
-Please refer to the [Concrete CMS documentation](https://documentation.concretecms.org/9-x/developers/rest-api/introduction) for more information.
+The [Concrete CMS documentation](https://documentation.concretecms.org/9-x/developers/rest-api/introduction) provides an introduction to the REST API and to its configuration.
+
+When you create the API Integration in Concrete CMS (*System & Settings* > *API* > *Integrations*), you have to set the **Redirect URI** to the address where the MCP server receives the OAuth callback.
+
+If you run the MCP server locally (for example with Claude Desktop, or with the prebuilt `.mcpb` extension), the redirect URI is:
+
+```
+http://localhost:3000/callback
+```
+
+`3000` is the default port: if you customize it with the `HTTP_PORT` setting, adjust the redirect URI accordingly.
+
+If you instead run the MCP server remotely (HTTP transport), the redirect URI is `${PUBLIC_BASE_URL}/oauth/callback` — see the [Remote MCP Server Guide](docs/remote-server.md) for the details.
+
+Take note of the resulting **Client ID** and **Client Secret**: you'll need them when configuring the MCP server (see [Settings](#settings) below).
 
 ### Install the MCP Server
 
