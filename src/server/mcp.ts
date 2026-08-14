@@ -18,6 +18,7 @@ import {
 import { OPENAPI_SPEC_FILE } from '../paths.js'
 import { createPageTools } from '../tools/pageTools.js'
 import { applyGeneratedToolAnnotations } from '../tools/annotations.js'
+import { applyLibraryHttpDebug } from '../httpDebug.js'
 
 export interface McpServerOptions {
   transport?: 'stdio' | 'http'
@@ -64,6 +65,7 @@ export async function startMcpServer(
 
     await openApiServer.start(httpTransport)
     applyGeneratedToolAnnotations(openApiServer)
+    applyLibraryHttpDebug(openApiServer)
     log(`Remote MCP server running at ${publicBaseUrl}${mcpEndpointPath}`)
     log(`OAuth start URL: ${publicBaseUrl}${oauthStartPath}`)
     return
@@ -72,4 +74,5 @@ export async function startMcpServer(
   const stdioTransport = new StdioServerTransport()
   await openApiServer.start(stdioTransport)
   applyGeneratedToolAnnotations(openApiServer)
+  applyLibraryHttpDebug(openApiServer)
 }
