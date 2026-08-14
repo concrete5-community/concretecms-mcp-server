@@ -91,15 +91,16 @@
     "TOKEN_ENCRYPTION_KEY": {
       "type": "string",
       "title": "Token Encryption Key",
-      "description": "A secret key used to encrypt tokens - required for http mode",
+      "description": "A secret key used to encrypt tokens - required for http mode\nGenerate with:\nnode -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\"",
       "required": false,
       "sensitive": true
     },
     "CONCRETE_USER_ID": {
       "type": "string",
-      "title": "ConcreteCMS User ID (default: local)",
+      "title": "User key used to store user tokens (stdio mode)",
       "description": "The user key used to store user tokens",
       "required": false,
+      "default": "local",
       "sensitive": false
     },
     "PUBLIC_BASE_URL": {
