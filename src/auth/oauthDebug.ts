@@ -1,3 +1,4 @@
+import { log } from '../log.js'
 import { oauthDebug } from '../env.js'
 
 export type OAuthCallbackFailureReason =
@@ -54,11 +55,11 @@ export function describeOAuthError(error: unknown): string {
 
 export function logOAuthCallbackEvent(message: string, context?: Record<string, unknown>): void {
   if (!context || Object.keys(context).length === 0) {
-    console.error(`[concretecms-mcp] ${message}`)
+    log(message)
     return
   }
 
-  console.error(`[concretecms-mcp] ${message} ${JSON.stringify(context)}`)
+  log(`${message} ${JSON.stringify(context)}`)
 }
 
 export function logOAuthCallbackFailure(failure: OAuthCallbackFailure): void {

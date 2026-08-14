@@ -1,3 +1,4 @@
+import { log } from '../log.js'
 import {
   OpenAPIServer,
   AuthProvider,
@@ -28,7 +29,7 @@ export async function startMcpServer(
   options: McpServerOptions = {}
 ): Promise<void> {
   const transport = options.transport ?? transportType
-  console.error(`[concretecms-mcp] Starting MCP server (${transport} transport)...`)
+  log(`Starting MCP server (${transport} transport)...`)
 
   const openApiServerConfig = {
     name: 'Concrete CMS',
@@ -63,10 +64,8 @@ export async function startMcpServer(
 
     await openApiServer.start(httpTransport)
     applyGeneratedToolAnnotations(openApiServer)
-    console.error(
-      `[concretecms-mcp] Remote MCP server running at ${publicBaseUrl}${mcpEndpointPath}`
-    )
-    console.error(`[concretecms-mcp] OAuth start URL: ${publicBaseUrl}${oauthStartPath}`)
+    log(`Remote MCP server running at ${publicBaseUrl}${mcpEndpointPath}`)
+    log(`OAuth start URL: ${publicBaseUrl}${oauthStartPath}`)
     return
   }
 

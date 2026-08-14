@@ -3,8 +3,9 @@
 // "${user_config.KEY}" string in the environment instead of omitting the
 // variable. Because that string is truthy, it slips past the code that falls
 // back to defaults. Strip those values so blank optional settings behave as if
-// unset. This must run before main.js is imported, since its module graph reads
-// process.env at load time — hence the dynamic import below.
+// unset. This must run before any module that reads process.env at load time is
+// imported — hence the dynamic imports below (the logger included, so any future
+// env-based logging configuration is only read after this has run).
 const UNRESOLVED_PLACEHOLDER = /^\$\{user_config\.[^}]*\}$/
 for (const [key, value] of Object.entries(process.env)) {
   if (typeof value === 'string' && UNRESOLVED_PLACEHOLDER.test(value.trim())) {
@@ -12,10 +13,11 @@ for (const [key, value] of Object.entries(process.env)) {
   }
 }
 
+const { log } = await import('./log.js')
 const { main } = await import('./main.js')
 
 main().catch((error) => {
-  console.error('[concretecms-mcp] Error in MCP server:', error)
+  log('Error in MCP server:', error)
   process.exit(1)
 })
 

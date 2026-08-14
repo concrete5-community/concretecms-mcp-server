@@ -1,3 +1,4 @@
+import { log } from '../log.js'
 import {
   existsSync,
   mkdirSync,
@@ -120,7 +121,7 @@ export class OAuthLock {
         setTimeout(check, 1000)
       }
 
-      console.error('[concretecms-mcp] Waiting for another OAuth flow to complete...')
+      log('Waiting for another OAuth flow to complete...')
       check()
     })
   }
