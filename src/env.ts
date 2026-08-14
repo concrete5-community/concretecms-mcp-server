@@ -151,6 +151,15 @@ export const tokenEncryptionKey = process.env.TOKEN_ENCRYPTION_KEY || null
 
 export const oauthDebug = optionalBoolEnv('OAUTH_DEBUG', false)
 
+// Log every Concrete REST request/response (method, URL, bodies, status) to
+// stderr for troubleshooting. Sensitive fields are redacted, bodies truncated,
+// and the bearer token is never logged. Off by default; noisy when on.
+export const apiDebug = optionalBoolEnv('CONCRETE_API_DEBUG', false)
+
+// Max length (characters) for any logged request/response body, shared across
+// all debug output. 0 disables truncation (log the full body).
+export const debugMaxBody = optionalIntEnv('DEBUG_MAX_BODY', 2000)
+
 // Allow the Concrete server to be reached over plain HTTP. openid-client v6
 // rejects non-HTTPS requests with OAUTH_HTTP_REQUEST_FORBIDDEN before OAuth
 // discovery even starts, so this must be opt-in for local/dev instances served

@@ -43,8 +43,10 @@
         "OAUTH_STATUS_PATH": "${user_config.OAUTH_STATUS_PATH}",
         "OAUTH_REVOKE_PATH": "${user_config.OAUTH_REVOKE_PATH}",
         "HEALTH_PATH": "${user_config.HEALTH_PATH}",
+        "CONCRETE_ALLOW_INSECURE_HTTP": "${user_config.CONCRETE_ALLOW_INSECURE_HTTP}",
         "OAUTH_DEBUG": "${user_config.OAUTH_DEBUG}",
-        "CONCRETE_ALLOW_INSECURE_HTTP": "${user_config.CONCRETE_ALLOW_INSECURE_HTTP}"
+        "CONCRETE_API_DEBUG": "${user_config.CONCRETE_API_DEBUG}",
+        "DEBUG_MAX_BODY": "${user_config.DEBUG_MAX_BODY}"
       }
     }
   },
@@ -195,6 +197,13 @@
       "required": false,
       "sensitive": false
     },
+    "CONCRETE_ALLOW_INSECURE_HTTP": {
+      "type": "boolean",
+      "title": "Allow insecure HTTP",
+      "description": "Allow connecting to a Concrete server over plain HTTP instead of HTTPS. For local/development instances only - never enable against a production server (default: false)",
+      "required": false,
+      "sensitive": false
+    },
     "OAUTH_DEBUG": {
       "type": "boolean",
       "title": "OAuth debug mode",
@@ -202,11 +211,20 @@
       "required": false,
       "sensitive": false
     },
-    "CONCRETE_ALLOW_INSECURE_HTTP": {
+    "CONCRETE_API_DEBUG": {
       "type": "boolean",
-      "title": "Allow insecure HTTP",
-      "description": "Allow connecting to a Concrete server over plain HTTP instead of HTTPS. For local/development instances only - never enable against a production server (default: false)",
+      "title": "Concrete API debug mode",
+      "description": "Log Concrete REST requests and responses (method, URL, bodies, status) to the server log for troubleshooting. Sensitive fields are redacted and bodies truncated by default (default: false)",
       "required": false,
+      "sensitive": false
+    },
+    "DEBUG_MAX_BODY": {
+      "type": "number",
+      "title": "Debug body limit",
+      "description": "Max number of characters logged for each request/response body in any debug output. Set to 0 to log full bodies without truncation (default: 2000)",
+      "required": false,
+      "default": 2000,
+      "min": 0,
       "sensitive": false
     }
   }
