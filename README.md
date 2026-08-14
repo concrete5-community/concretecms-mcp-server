@@ -76,6 +76,13 @@ You can also add this MCP server via JSON. For example:
 }
 ```
 
+This uses the standard `mcpServers` format understood by most MCP clients (Claude Desktop, Cursor, Cline, and others).
+It goes in that client's MCP configuration file; if the file already defines other servers, add `concretecms` as another entry under `mcpServers` rather than replacing the whole object.
+The exact file and its location depend on the client — check the client's documentation.
+For Claude Desktop, open it via _Settings_ > _Developer_ > _Edit Config_ (this creates the file if it does not exist yet), or edit `claude_desktop_config.json` directly (`%APPDATA%\Claude\` on Windows, `~/Library/Application Support/Claude/` on macOS).
+
+Restart the client after saving.
+
 ## Usage
 
 ### Settings
