@@ -1,3 +1,4 @@
+import { log } from '../log.js'
 import type { IncomingMessage, Server, ServerResponse } from 'node:http'
 import {
   healthPath,
@@ -175,7 +176,7 @@ async function handleOAuthStart(
     blockFurtherResponseWrites(res)
   } catch (error) {
     releaseOAuthStartLock(lockUserId)
-    console.error(`[concretecms-mcp] OAuth start failed: ${redactError(error)}`)
+    log(`OAuth start failed: ${redactError(error)}`)
     sendJson(res, 500, { error: 'Failed to start OAuth flow' })
   }
 }

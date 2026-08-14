@@ -1,3 +1,4 @@
+import { log } from '../log.js'
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
 
 export type ToolAnnotations = NonNullable<Tool['annotations']>
@@ -98,9 +99,7 @@ export function applyGeneratedToolAnnotations(server: unknown): number {
     typeof toolsManager.getToolsWithIds !== 'function' ||
     typeof toolsManager.parseToolId !== 'function'
   ) {
-    console.error(
-      '[concretecms-mcp] Could not annotate generated tools: unexpected library internals'
-    )
+    log('Could not annotate generated tools: unexpected library internals')
     return 0
   }
 

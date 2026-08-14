@@ -1,3 +1,4 @@
+import { log } from './log.js'
 import {
   existsSync,
   mkdirSync,
@@ -244,7 +245,7 @@ export function migrateFlatTokenDir(): void {
     }
 
     renameSync(sourcePath, destPath)
-    console.error(`[concretecms-mcp] Migrated ${file} into site directory ${getSiteKey()}`)
+    log(`Migrated ${file} into site directory ${getSiteKey()}`)
   }
 }
 
@@ -265,7 +266,7 @@ export function saveTokens(
 
   atomicWrite(tokensFilePath(userId), encrypt(tokenData))
   atomicWrite(clientFilePath(userId), encrypt({ parameters } satisfies StoredClientInfo))
-  console.error(`[concretecms-mcp] Tokens saved for user ${userId} (site ${getSiteKey()})`)
+  log(`Tokens saved for user ${userId} (site ${getSiteKey()})`)
 }
 
 export function loadTokens(
@@ -300,7 +301,7 @@ export function loadTokens(
 
     return { ...tokens, parameters }
   } catch {
-    console.error(`[concretecms-mcp] Failed to load tokens for user ${userId}`)
+    log(`Failed to load tokens for user ${userId}`)
     return null
   }
 }
@@ -386,7 +387,7 @@ function cleanupExpiredTokensInDir(
             unlinkSync(path)
           }
         }
-        console.error(`[concretecms-mcp] Removed expired tokens for user ${userId}`)
+        log(`Removed expired tokens for user ${userId}`)
         removed++
       }
     } catch {
@@ -415,8 +416,8 @@ export function migrateLegacyTokens(): void {
   }
 
   if (transportType === 'http') {
-    console.error(
-      '[concretecms-mcp] Legacy .tokens.json found but http mode requires per-user tokens. Re-authorize each user via /oauth/start.'
+    log(
+      'Legacy .tokens.json found but http mode requires per-user tokens. Re-authorize each user via /oauth/start.'
     )
     return
   }
@@ -427,10 +428,8 @@ export function migrateLegacyTokens(): void {
     const { parameters, ...tokens } = combined
     saveTokens(stdioUserKey, tokens, parameters)
     unlinkSync(LEGACY_TOKEN_FILE)
-    console.error(
-      `[concretecms-mcp] Migrated legacy tokens to ${stdioUserKey} (site ${getSiteKey()})`
-    )
+    log(`Migrated legacy tokens to ${stdioUserKey} (site ${getSiteKey()})`)
   } catch {
-    console.error('[concretecms-mcp] Failed to migrate legacy tokens')
+    log('Failed to migrate legacy tokens')
   }
 }

@@ -1,3 +1,4 @@
+import { log } from '../log.js'
 import * as client from 'openid-client'
 import { config } from './oidc.js'
 import { loadTokens, needsTokenRefresh, saveTokens } from '../tokenStore.js'
@@ -66,7 +67,7 @@ export class UserTokenSession {
         await this.refreshAccessToken()
         return true
       } catch {
-        console.error('[concretecms-mcp] Failed to refresh token, re-authentication required')
+        log('Failed to refresh token, re-authentication required')
         throw new Error('Not authenticated for this session')
       }
     }
@@ -80,7 +81,7 @@ export class UserTokenSession {
     }
 
     try {
-      console.error(`[concretecms-mcp] Refreshing access token for user ${this.userId}...`)
+      log(`Refreshing access token for user ${this.userId}...`)
       const tokenEndpointResponse: client.TokenEndpointResponse = await client.refreshTokenGrant(
         config,
         this._refreshToken,
@@ -106,11 +107,9 @@ export class UserTokenSession {
         this._parameters
       )
 
-      console.error(`[concretecms-mcp] Access token refreshed for user ${this.userId}`)
+      log(`Access token refreshed for user ${this.userId}`)
     } catch (error) {
-      console.error(
-        `[concretecms-mcp] Token refresh failed for user ${this.userId}: ${redactError(error)}`
-      )
+      log(`Token refresh failed for user ${this.userId}: ${redactError(error)}`)
       throw error
     }
   }

@@ -1,3 +1,5 @@
+import { log } from './log.js'
+
 function requireEnv(name: string): string {
   const value = process.env[name]
   if (!value) {
@@ -62,8 +64,8 @@ function sanitizeScope(rawScope: string): string {
   const requested = rawScope.split(/\s+/).filter(Boolean)
   const kept = requested.filter((s) => s.toLowerCase() !== 'openid')
   if (kept.length !== requested.length) {
-    console.error(
-      '[concretecms-mcp] Ignoring the "openid" scope: this server does not use OIDC ID tokens, and Concrete\'s ID token fails standard validation.'
+    log(
+      'Ignoring the "openid" scope: this server does not use OIDC ID tokens, and Concrete\'s ID token fails standard validation.'
     )
   }
   return kept.join(' ')
@@ -185,8 +187,8 @@ export function warnStdioEncryptionOnce(): void {
   }
 
   stdioEncryptionWarningShown = true
-  console.error(
-    '[concretecms-mcp] Warning: TOKEN_ENCRYPTION_KEY is not set. Tokens will be stored in plaintext. Set TOKEN_ENCRYPTION_KEY to encrypt tokens at rest.'
+  log(
+    'Warning: TOKEN_ENCRYPTION_KEY is not set. Tokens will be stored in plaintext. Set TOKEN_ENCRYPTION_KEY to encrypt tokens at rest.'
   )
 }
 

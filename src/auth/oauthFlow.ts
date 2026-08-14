@@ -1,3 +1,4 @@
+import { log } from '../log.js'
 import * as client from 'openid-client'
 import { createServer } from 'node:http'
 import { exec } from 'node:child_process'
@@ -48,7 +49,7 @@ export async function performOAuthFlow(authProvider: UserTokenSession): Promise<
       } else if (url.pathname === '/callback') {
         try {
           const getCurrentUrl = () => new URL(req.url!, `http://localhost:${httpPort}`)
-          console.error('[concretecms-mcp] Processing local OAuth callback')
+          log('Processing local OAuth callback')
           const tokens = await exchangeAuthorizationCode(getCurrentUrl(), code_verifier)
           const stored = await saveTokensForStdioUser(stdioUserKey, tokens, parameters)
           authProvider.applyTokens(stored)
@@ -79,7 +80,7 @@ export async function performOAuthFlow(authProvider: UserTokenSession): Promise<
           httpServer.close()
           resolve()
         } catch (error) {
-          console.error(`[concretecms-mcp] Token exchange failed: ${redactError(error)}`)
+          log(`Token exchange failed: ${redactError(error)}`)
 
           res.writeHead(400, { 'Content-Type': 'text/html' })
           res.end(`
@@ -107,23 +108,23 @@ export async function performOAuthFlow(authProvider: UserTokenSession): Promise<
 
     httpServer.on('error', (error: NodeJS.ErrnoException) => {
       if (error.code === 'EADDRINUSE') {
-        console.error(`[concretecms-mcp] Port ${httpPort} is already in use.`)
-        console.error('[concretecms-mcp] Please close the application using this port or run:')
-        console.error(`[concretecms-mcp]   lsof -ti:${httpPort} | xargs kill -9`)
+        log(`Port ${httpPort} is already in use.`)
+        log('Please close the application using this port or run:')
+        log(`  lsof -ti:${httpPort} | xargs kill -9`)
         reject(new Error(`Port ${httpPort} is already in use. Please free the port and try again.`))
       } else {
-        console.error(`[concretecms-mcp] Server error: ${redactError(error)}`)
+        log(`Server error: ${redactError(error)}`)
         reject(error)
       }
     })
 
     httpServer.listen(httpPort, '127.0.0.1', () => {
-      console.error(`[concretecms-mcp] Local server started on http://localhost:${httpPort}`)
-      console.error('[concretecms-mcp] Server will automatically stop after 10 minutes if not used')
-      console.error('[concretecms-mcp] Opening browser...')
+      log(`Local server started on http://localhost:${httpPort}`)
+      log('Server will automatically stop after 10 minutes if not used')
+      log('Opening browser...')
 
       timeoutId = setTimeout(() => {
-        console.error('[concretecms-mcp] OAuth server timed out after 10 minutes')
+        log('OAuth server timed out after 10 minutes')
         httpServer.close()
         reject(new Error('OAuth authentication timed out. Please try again.'))
       }, TIMEOUT_MS)
@@ -141,10 +142,8 @@ export async function performOAuthFlow(authProvider: UserTokenSession): Promise<
 
       exec(command, (error) => {
         if (error) {
-          console.error('[concretecms-mcp] Failed to open browser automatically.')
-          console.error(
-            `[concretecms-mcp] Please open this URL manually: http://localhost:${httpPort}`
-          )
+          log('Failed to open browser automatically.')
+          log(`Please open this URL manually: http://localhost:${httpPort}`)
         }
       })
     })
