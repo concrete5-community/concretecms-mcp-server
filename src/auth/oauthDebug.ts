@@ -23,6 +23,9 @@ function escapeHtml(text: string): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
+    .replace(/\n\r/g, '\n')
+    .replace(/\r/g, '\n')
+    .replace(/\n/g, '<br />')
 }
 
 export function describeOAuthError(error: unknown): string {
