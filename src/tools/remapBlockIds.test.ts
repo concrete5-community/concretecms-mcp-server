@@ -56,9 +56,7 @@ describe('remapBlockIds', () => {
   it('throws when the old block ID is unknown', () => {
     assert.throws(
       () =>
-        remapBlockIds(beforeAreas, afterAreas, [
-          { areaHandle: 'Main', blockID: 999, value: {} },
-        ]),
+        remapBlockIds(beforeAreas, afterAreas, [{ areaHandle: 'Main', blockID: 999, value: {} }]),
       BlockRemapError
     )
   })
@@ -66,9 +64,7 @@ describe('remapBlockIds', () => {
   it('throws when remapped block is not in the requested area', () => {
     assert.throws(
       () =>
-        remapBlockIds(beforeAreas, afterAreas, [
-          { areaHandle: 'Sidebar', blockID: 10, value: {} },
-        ]),
+        remapBlockIds(beforeAreas, afterAreas, [{ areaHandle: 'Sidebar', blockID: 10, value: {} }]),
       /not in area "Sidebar"/
     )
   })

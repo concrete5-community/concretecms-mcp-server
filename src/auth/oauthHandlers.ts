@@ -14,7 +14,12 @@ import { clearTokens } from '../tokenStore.js'
 import { MultiUserAuthProvider } from './MultiUserAuthProvider.js'
 import { acquireOAuthStartLock, releaseOAuthStartLock } from './authCoordinator.js'
 import type { OAuthSession } from './oauthSession.js'
-import { getOAuthSession, listPendingOAuthSessions, removeOAuthSession, createOAuthSession } from './oauthSession.js'
+import {
+  getOAuthSession,
+  listPendingOAuthSessions,
+  removeOAuthSession,
+  createOAuthSession,
+} from './oauthSession.js'
 import {
   describeOAuthError,
   formatOAuthFailureHtmlBody,
@@ -206,14 +211,17 @@ async function handleOAuthCallback(
     hasCode: Boolean(code),
     hasState: Boolean(state),
     pendingSessionCount: pendingSessions.length,
-    pendingUserIds: pendingSessions.map(({ session }) => session.intendedUserId ?? session.lockUserId),
+    pendingUserIds: pendingSessions.map(
+      ({ session }) => session.intendedUserId ?? session.lockUserId
+    ),
     oauthError: oauthError ?? undefined,
   })
 
   if (oauthError) {
     sendOAuthFailure(res, {
       reason: 'oauth_provider_error',
-      message: 'Concrete CMS rejected the OAuth request before the MCP server could finish authorization.',
+      message:
+        'Concrete CMS rejected the OAuth request before the MCP server could finish authorization.',
       detail: oauthErrorDescription ?? oauthError,
       context: {
         error: oauthError,

@@ -14,11 +14,11 @@ For building MCP clients and AI agents that call this server, see the **[MCP Cli
 
 Remote clients authenticate with `Authorization: Bearer <MCP_API_KEY>` and identify the CMS user with `X-Concrete-User-Id` on every `/mcp` request.
 
-| Integration | Description |
-|-------------|-------------|
-| **Backend agent** | Your service calls `/mcp` and OAuth admin routes |
-| **Web app proxy** | Your API forwards to `/mcp`; API key stays server-side |
-| **CMS package** | Dashboard controller proxies to `/mcp` using session user ID |
+| Integration       | Description                                                  |
+| ----------------- | ------------------------------------------------------------ |
+| **Backend agent** | Your service calls `/mcp` and OAuth admin routes             |
+| **Web app proxy** | Your API forwards to `/mcp`; API key stays server-side       |
+| **CMS package**   | Dashboard controller proxies to `/mcp` using session user ID |
 
 See the **[MCP Client Developer Guide](mcp-client-guide.md)** for HTTP API details, OAuth flow, and implementation patterns.
 
@@ -30,23 +30,23 @@ See the [Security Guide](security.md) for the full trust model.
 
 ## Environment variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `TRANSPORT_TYPE` | No | `stdio` | Set to `http` for remote mode |
-| `PUBLIC_BASE_URL` | Yes (http mode) | — | Public URL of this server, e.g. `https://mcp.example.com` |
-| `TOKEN_ENCRYPTION_KEY` | Yes (http mode) | — | AES-256-GCM encryption key for token files |
-| `MCP_API_KEY` | Yes (http mode)* | — | Bearer token for MCP clients |
-| `MCP_API_KEYS` | Alternative | — | JSON map of API keys to CMS user IDs (`null` = dynamic) |
-| `PATH_PREFIX` | No | _(empty)_ | Path prefix for all routes, e.g. `/ccm-mcp` |
-| `HTTP_HOST` | No | `0.0.0.0` | Bind address |
-| `HTTP_PORT` | No | `3000` | Listen port |
-| `TOKEN_DIR` | No | `~/.concretecms-mcp/tokens` | Base token directory; per-site subdirs are created automatically |
-| `MCP_ENDPOINT_PATH` | No | `{PATH_PREFIX}/mcp` | Streamable HTTP MCP endpoint |
-| `OAUTH_START_PATH` | No | `{PATH_PREFIX}/oauth/start` | OAuth initiation path |
-| `OAUTH_CALLBACK_PATH` | No | `{PATH_PREFIX}/oauth/callback` | OAuth redirect path |
-| `OAUTH_STATUS_PATH` | No | `{PATH_PREFIX}/oauth/status` | OAuth status path |
-| `OAUTH_REVOKE_PATH` | No | `{PATH_PREFIX}/oauth/revoke` | Per-user token revocation |
-| `HEALTH_PATH` | No | `{PATH_PREFIX}/health` | Health check path |
+| Variable               | Required         | Default                        | Description                                                      |
+| ---------------------- | ---------------- | ------------------------------ | ---------------------------------------------------------------- |
+| `TRANSPORT_TYPE`       | No               | `stdio`                        | Set to `http` for remote mode                                    |
+| `PUBLIC_BASE_URL`      | Yes (http mode)  | —                              | Public URL of this server, e.g. `https://mcp.example.com`        |
+| `TOKEN_ENCRYPTION_KEY` | Yes (http mode)  | —                              | AES-256-GCM encryption key for token files                       |
+| `MCP_API_KEY`          | Yes (http mode)* | —                              | Bearer token for MCP clients                                     |
+| `MCP_API_KEYS`         | Alternative      | —                              | JSON map of API keys to CMS user IDs (`null` = dynamic)          |
+| `PATH_PREFIX`          | No               | _(empty)_                      | Path prefix for all routes, e.g. `/ccm-mcp`                      |
+| `HTTP_HOST`            | No               | `0.0.0.0`                      | Bind address                                                     |
+| `HTTP_PORT`            | No               | `3000`                         | Listen port                                                      |
+| `TOKEN_DIR`            | No               | `~/.concretecms-mcp/tokens`    | Base token directory; per-site subdirs are created automatically |
+| `MCP_ENDPOINT_PATH`    | No               | `{PATH_PREFIX}/mcp`            | Streamable HTTP MCP endpoint                                     |
+| `OAUTH_START_PATH`     | No               | `{PATH_PREFIX}/oauth/start`    | OAuth initiation path                                            |
+| `OAUTH_CALLBACK_PATH`  | No               | `{PATH_PREFIX}/oauth/callback` | OAuth redirect path                                              |
+| `OAUTH_STATUS_PATH`    | No               | `{PATH_PREFIX}/oauth/status`   | OAuth status path                                                |
+| `OAUTH_REVOKE_PATH`    | No               | `{PATH_PREFIX}/oauth/revoke`   | Per-user token revocation                                        |
+| `HEALTH_PATH`          | No               | `{PATH_PREFIX}/health`         | Health check path                                                |
 
 \* Either `MCP_API_KEY` or `MCP_API_KEYS` is required in http mode.
 
@@ -182,14 +182,14 @@ OAUTH_DEBUG=1 npm run start
 
 When enabled, the browser callback page shows a `Reason:` code and details. The MCP server always logs the same reason to stderr, for example:
 
-| Reason | Meaning |
-|--------|---------|
-| `no_pending_sessions` | MCP has no in-memory OAuth session (server restarted, flow expired, or `/oauth/start` never reached this process) |
-| `pkce_match_failed` | Callback arrived, but token exchange failed for every pending session — see per-session errors in logs |
-| `user_id_mismatch` | Token exchange succeeded, but the CMS account that approved OAuth is not the `user_id` from `/oauth/start` |
-| `resolve_cms_user_failed` | Token exchange succeeded, but `/ccm/api/1.0/account` could not be read with the new access token |
-| `oauth_provider_error` | CMS redirected with `error=` instead of `code=` |
-| `missing_authorization_code` | Callback reached MCP without a `code` query parameter |
+| Reason                       | Meaning                                                                                                           |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `no_pending_sessions`        | MCP has no in-memory OAuth session (server restarted, flow expired, or `/oauth/start` never reached this process) |
+| `pkce_match_failed`          | Callback arrived, but token exchange failed for every pending session — see per-session errors in logs            |
+| `user_id_mismatch`           | Token exchange succeeded, but the CMS account that approved OAuth is not the `user_id` from `/oauth/start`        |
+| `resolve_cms_user_failed`    | Token exchange succeeded, but `/ccm/api/1.0/account` could not be read with the new access token                  |
+| `oauth_provider_error`       | CMS redirected with `error=` instead of `code=`                                                                   |
+| `missing_authorization_code` | Callback reached MCP without a `code` query parameter                                                             |
 
 ### 6. Connect your AI agent
 
@@ -210,20 +210,20 @@ Authorize the CMS user via `/oauth/start` before calling tools. Poll `/oauth/sta
 
 ### Troubleshooting local HTTP mode
 
-| Symptom | Likely cause | Fix |
-|---------|--------------|-----|
-| `http://127.0.0.1:3000/health` connection refused | Server running in stdio mode (default) | Set `TRANSPORT_TYPE=http` and restart |
-| Terminal shows `(stdio transport)` | `TRANSPORT_TYPE` not exported | Use the single-line command or `set -a && source .env` |
-| `Missing required environment variable: TOKEN_ENCRYPTION_KEY` | HTTP secrets not set | Set `TOKEN_ENCRYPTION_KEY` and `MCP_API_KEY` |
-| `zsh: command not found: I` (or similar) | Extra text on an env-var line | Each line must be only `VAR=value` — no trailing words |
-| `TRANSPORT_TYPE` set but still stdio | `VAR=value other-command` syntax | `TOKEN_ENCRYPTION_KEY=xxx npm run start` sets the var only for that command; use `export` or `source .env` instead |
-| Broken multiline command | Missing `\` at end of a line | Every continued line except the last must end with `\` |
-| OAuth redirect mismatch | `PUBLIC_BASE_URL` differs from registered URI | Register `http://127.0.0.1:3000/oauth/callback` in CMS and match `PUBLIC_BASE_URL` |
-| Port already in use | Another process on port 3000 | Change `HTTP_PORT` and update `PUBLIC_BASE_URL` accordingly |
-| OAuth callback **400** — Authorization could not be completed | See MCP server logs for `OAuth callback failed: <reason>` | Restart with `OAUTH_DEBUG=1` to show the reason in the browser |
-| Authorize URL missing `state` | Running outdated `dist/` | `npm run build && npm run verify:oauth`, then restart |
-| Callback 400 with `state` present | Client modified MCP `Location` URL, multiple MCP processes, or expired session | Forward `Location` unchanged; `lsof -nP -iTCP:3000 -sTCP:LISTEN`; complete flow within 10 minutes |
-| `/oauth/start` 409 | Concurrent OAuth for same user | Wait or call `/oauth/revoke` |
+| Symptom                                                       | Likely cause                                                                   | Fix                                                                                                                |
+| ------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `http://127.0.0.1:3000/health` connection refused             | Server running in stdio mode (default)                                         | Set `TRANSPORT_TYPE=http` and restart                                                                              |
+| Terminal shows `(stdio transport)`                            | `TRANSPORT_TYPE` not exported                                                  | Use the single-line command or `set -a && source .env`                                                             |
+| `Missing required environment variable: TOKEN_ENCRYPTION_KEY` | HTTP secrets not set                                                           | Set `TOKEN_ENCRYPTION_KEY` and `MCP_API_KEY`                                                                       |
+| `zsh: command not found: I` (or similar)                      | Extra text on an env-var line                                                  | Each line must be only `VAR=value` — no trailing words                                                             |
+| `TRANSPORT_TYPE` set but still stdio                          | `VAR=value other-command` syntax                                               | `TOKEN_ENCRYPTION_KEY=xxx npm run start` sets the var only for that command; use `export` or `source .env` instead |
+| Broken multiline command                                      | Missing `\` at end of a line                                                   | Every continued line except the last must end with `\`                                                             |
+| OAuth redirect mismatch                                       | `PUBLIC_BASE_URL` differs from registered URI                                  | Register `http://127.0.0.1:3000/oauth/callback` in CMS and match `PUBLIC_BASE_URL`                                 |
+| Port already in use                                           | Another process on port 3000                                                   | Change `HTTP_PORT` and update `PUBLIC_BASE_URL` accordingly                                                        |
+| OAuth callback **400** — Authorization could not be completed | See MCP server logs for `OAuth callback failed: <reason>`                      | Restart with `OAUTH_DEBUG=1` to show the reason in the browser                                                     |
+| Authorize URL missing `state`                                 | Running outdated `dist/`                                                       | `npm run build && npm run verify:oauth`, then restart                                                              |
+| Callback 400 with `state` present                             | Client modified MCP `Location` URL, multiple MCP processes, or expired session | Forward `Location` unchanged; `lsof -nP -iTCP:3000 -sTCP:LISTEN`; complete flow within 10 minutes                  |
+| `/oauth/start` 409                                            | Concurrent OAuth for same user                                                 | Wait or call `/oauth/revoke`                                                                                       |
 
 ## Concrete CMS OAuth setup
 

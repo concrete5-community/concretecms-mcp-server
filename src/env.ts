@@ -100,7 +100,9 @@ export const publicBaseUrl = (() => {
 
   if (transportType === 'http') {
     if (!url) {
-      throw new Error('Missing required environment variable: PUBLIC_BASE_URL (required when TRANSPORT_TYPE=http)')
+      throw new Error(
+        'Missing required environment variable: PUBLIC_BASE_URL (required when TRANSPORT_TYPE=http)'
+      )
     }
     return normalizeBaseUrl(url)
   }
@@ -122,7 +124,9 @@ function parseMcpApiKeys(): McpApiKeyEntry[] {
     try {
       parsed = JSON.parse(keysJson) as Record<string, number | null>
     } catch {
-      throw new Error('Invalid MCP_API_KEYS: must be valid JSON object mapping keys to user IDs or null')
+      throw new Error(
+        'Invalid MCP_API_KEYS: must be valid JSON object mapping keys to user IDs or null'
+      )
     }
 
     return Object.entries(parsed).map(([key, boundUserId]) => ({
@@ -163,11 +167,15 @@ export function validateHttpSecrets(): void {
   }
 
   if (!tokenEncryptionKey) {
-    throw new Error('Missing required environment variable: TOKEN_ENCRYPTION_KEY (required when TRANSPORT_TYPE=http)')
+    throw new Error(
+      'Missing required environment variable: TOKEN_ENCRYPTION_KEY (required when TRANSPORT_TYPE=http)'
+    )
   }
 
   if (mcpApiKeys.length === 0) {
-    throw new Error('Missing required environment variable: MCP_API_KEY or MCP_API_KEYS (required when TRANSPORT_TYPE=http)')
+    throw new Error(
+      'Missing required environment variable: MCP_API_KEY or MCP_API_KEYS (required when TRANSPORT_TYPE=http)'
+    )
   }
 }
 

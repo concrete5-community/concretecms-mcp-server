@@ -91,8 +91,7 @@ async function handleGetPageContent(
 ): Promise<CallToolResult> {
   try {
     const pageID = requirePageId(args)
-    const version =
-      args.version === 'recent' || args.version === 'active' ? args.version : 'active'
+    const version = args.version === 'recent' || args.version === 'active' ? args.version : 'active'
 
     const page = await client.get<PageContentResponse>(`/ccm/api/1.0/pages/${pageID}`, {
       includes: 'content',
@@ -141,11 +140,7 @@ async function handleUpdatePageContent(
       version: 'recent',
     })
 
-    const remapped = remapBlockIds(
-      beforePage.areas ?? [],
-      afterPage.areas ?? [],
-      updates
-    )
+    const remapped = remapBlockIds(beforePage.areas ?? [], afterPage.areas ?? [], updates)
 
     const blockResults: BlockUpdateResult[] = []
 

@@ -1,0 +1,32 @@
+{
+  // Formatting rules live in .prettierrc; this file only declares *who* formats.
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+
+  // Language-scoped settings win over generic ones, even from user settings:
+  // declare them here so a personal "[typescript]" override cannot hijack the formatter.
+  "[typescript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[javascript]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[yaml]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[markdown]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+
+  // Use the same Prettier as "npm run lint:*" instead of the one bundled with the
+  // extension: .prettierrc relies on options that only exist in recent releases.
+  "prettier.requireConfig": true,
+  "prettier.prettierPath": "./node_modules/prettier",
+
+  // Fallback for files Prettier cannot parse (Dockerfile, .env.example, .npmrc, ...).
+  // For everything else the authoritative values are tabWidth / useTabs / endOfLine in .prettierrc.
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+
+  // .prettierrc has no extension and is mapped to YAML by default, while its
+  // content is JSON (see the matching parser override in .prettierrc).
+  "files.associations": { ".prettierrc": "json" }
+}

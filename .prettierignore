@@ -1,0 +1,12 @@
+# Dependencies and build output
+/node_modules/
+/dist/
+
+# Generated / vendored: reformatting only creates churn
+/package-lock.json
+/openapi.yml
+
+# Local runtime data and packaged artifacts
+/.tokens/
+/.tokens.json
+*.mcpb

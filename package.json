@@ -5,6 +5,8 @@
   "main": "dist/index.js",
   "bin": "dist/index.js",
   "scripts": {
+    "lint:check": "prettier --check .",
+    "lint:fix": "prettier --write .",
     "build": "tsc",
     "prepack": "npm run build",
     "pack": "npx mcpb pack . concretecms-mcp-server.mcpb",
@@ -31,6 +33,7 @@
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
+    "prettier": "^3.9.6",
     "typescript": "^5.9.3"
   }
 }

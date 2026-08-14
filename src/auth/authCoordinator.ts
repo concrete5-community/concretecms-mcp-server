@@ -13,7 +13,11 @@ export async function ensureAuthenticated(session: UserTokenSession): Promise<vo
     return
   }
 
-  if (session.loadStoredTokens() && session.isAuthenticated() && !needsTokenRefresh(session.getExpiresAt())) {
+  if (
+    session.loadStoredTokens() &&
+    session.isAuthenticated() &&
+    !needsTokenRefresh(session.getExpiresAt())
+  ) {
     return
   }
 
@@ -38,7 +42,11 @@ async function runAuthenticatedFlow(session: UserTokenSession): Promise<void> {
 
   if (lock.tryAcquire()) {
     try {
-      if (session.loadStoredTokens() && session.isAuthenticated() && !needsTokenRefresh(session.getExpiresAt())) {
+      if (
+        session.loadStoredTokens() &&
+        session.isAuthenticated() &&
+        !needsTokenRefresh(session.getExpiresAt())
+      ) {
         return
       }
 

@@ -142,7 +142,9 @@ export async function performOAuthFlow(authProvider: UserTokenSession): Promise<
       exec(command, (error) => {
         if (error) {
           console.error('[concretecms-mcp] Failed to open browser automatically.')
-          console.error(`[concretecms-mcp] Please open this URL manually: http://localhost:${httpPort}`)
+          console.error(
+            `[concretecms-mcp] Please open this URL manually: http://localhost:${httpPort}`
+          )
         }
       })
     })

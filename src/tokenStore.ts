@@ -334,9 +334,7 @@ export function clearTokens(userId?: string): void {
 }
 
 export function hasTokens(userId: string): boolean {
-  return (
-    existsSync(tokensFilePath(userId)) || existsSync(legacyCombinedFilePath(userId))
-  )
+  return existsSync(tokensFilePath(userId)) || existsSync(legacyCombinedFilePath(userId))
 }
 
 export function listAuthorizedUsers(tokenDir = getTokenDir()): string[] {
@@ -429,7 +427,9 @@ export function migrateLegacyTokens(): void {
     const { parameters, ...tokens } = combined
     saveTokens(stdioUserKey, tokens, parameters)
     unlinkSync(LEGACY_TOKEN_FILE)
-    console.error(`[concretecms-mcp] Migrated legacy tokens to ${stdioUserKey} (site ${getSiteKey()})`)
+    console.error(
+      `[concretecms-mcp] Migrated legacy tokens to ${stdioUserKey} (site ${getSiteKey()})`
+    )
   } catch {
     console.error('[concretecms-mcp] Failed to migrate legacy tokens')
   }

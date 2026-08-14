@@ -3,6 +3,9 @@ src/
 scripts/
 tsconfig.json
 package-lock.json
+.prettierrc
+.prettierignore
+.vscode/
 
 # Tests compiled in dist/
 dist/**/*.test.js
@@ -24,3 +27,4 @@ docker-compose.yml
 
 # Git
 .git/
+.gitattributes

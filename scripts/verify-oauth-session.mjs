@@ -40,12 +40,8 @@ for (const [key, value] of Object.entries(baseEnv())) {
 
 console.log('OAuth session binding tests')
 
-const {
-  createOAuthSession,
-  getOAuthSession,
-  listPendingOAuthSessions,
-  removeOAuthSession,
-} = await import(`file://${join(projectRoot, 'dist/auth/oauthSession.js')}?t=${Date.now()}`)
+const { createOAuthSession, getOAuthSession, listPendingOAuthSessions, removeOAuthSession } =
+  await import(`file://${join(projectRoot, 'dist/auth/oauthSession.js')}?t=${Date.now()}`)
 
 const { state, authorizationUrl } = await createOAuthSession(
   'http://127.0.0.1:3000/oauth/callback',
@@ -55,10 +51,7 @@ const { state, authorizationUrl } = await createOAuthSession(
 )
 
 assert(typeof state === 'string' && state.length > 0, 'createOAuthSession returns state')
-assert(
-  authorizationUrl.searchParams.has('state'),
-  'authorize URL includes state query parameter'
-)
+assert(authorizationUrl.searchParams.has('state'), 'authorize URL includes state query parameter')
 assert(
   authorizationUrl.searchParams.get('state') === state,
   'authorize URL state matches session state'
@@ -68,7 +61,10 @@ assert(
   'authorize URL includes PKCE code_challenge'
 )
 
-assert(getOAuthSession(state)?.codeVerifier !== undefined, 'getOAuthSession(state) returns PKCE session')
+assert(
+  getOAuthSession(state)?.codeVerifier !== undefined,
+  'getOAuthSession(state) returns PKCE session'
+)
 assert(listPendingOAuthSessions().length === 1, 'one pending session is listed')
 
 const { state: state2 } = await createOAuthSession(
@@ -83,11 +79,17 @@ assert(
   getOAuthSession('cms-replaced-state-value') === undefined,
   'unknown callback state does not consume pending sessions'
 )
-assert(listPendingOAuthSessions().length === 2, 'pending sessions remain after unknown state lookup')
+assert(
+  listPendingOAuthSessions().length === 2,
+  'pending sessions remain after unknown state lookup'
+)
 
 removeOAuthSession(state)
 assert(getOAuthSession(state) === undefined, 'removeOAuthSession deletes only the targeted session')
-assert(listPendingOAuthSessions().length === 1, 'other pending sessions remain after targeted removal')
+assert(
+  listPendingOAuthSessions().length === 1,
+  'other pending sessions remain after targeted removal'
+)
 
 removeOAuthSession(state2)
 assert(listPendingOAuthSessions().length === 0, 'all pending sessions can be removed individually')

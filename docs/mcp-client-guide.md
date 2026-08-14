@@ -33,12 +33,12 @@ Your application owns the conversation loop. The MCP server owns CMS token stora
 
 ## Choose your integration pattern
 
-| Pattern | Section |
-|---------|---------|
-| Backend agent service (Node, Python, PHP bot) | [Backend agent service](#backend-agent-service) |
-| Web application with chat UI | [Web application](#web-application-chat-ui--api-backend) |
-| Concrete CMS package (dashboard page) | [Concrete CMS package](#concrete-cms-package) |
-| Raw HTTP client (any language, no SDK) | [Raw HTTP client](#raw-http-client) |
+| Pattern                                       | Section                                                  |
+| --------------------------------------------- | -------------------------------------------------------- |
+| Backend agent service (Node, Python, PHP bot) | [Backend agent service](#backend-agent-service)          |
+| Web application with chat UI                  | [Web application](#web-application-chat-ui--api-backend) |
+| Concrete CMS package (dashboard page)         | [Concrete CMS package](#concrete-cms-package)            |
+| Raw HTTP client (any language, no SDK)        | [Raw HTTP client](#raw-http-client)                      |
 
 ## Architecture
 
@@ -70,14 +70,14 @@ Set `MCP_SERVER_URL` to the server's public base URL (same as `PUBLIC_BASE_URL`)
 
 ### Endpoints
 
-| Path | Method | Authentication | Purpose |
-|------|--------|----------------|---------|
-| `/mcp` | POST | API key + user ID | MCP JSON-RPC (tools) |
-| `/oauth/start` | GET | API key | Begin per-user OAuth |
-| `/oauth/status` | GET | API key | Check if user is authorized |
-| `/oauth/revoke` | POST | API key | Revoke user tokens |
-| `/oauth/callback` | GET | Public | CMS OAuth redirect (do not call manually) |
-| `/health` | GET | Public | Liveness check |
+| Path              | Method | Authentication    | Purpose                                   |
+| ----------------- | ------ | ----------------- | ----------------------------------------- |
+| `/mcp`            | POST   | API key + user ID | MCP JSON-RPC (tools)                      |
+| `/oauth/start`    | GET    | API key           | Begin per-user OAuth                      |
+| `/oauth/status`   | GET    | API key           | Check if user is authorized               |
+| `/oauth/revoke`   | POST   | API key           | Revoke user tokens                        |
+| `/oauth/callback` | GET    | Public            | CMS OAuth redirect (do not call manually) |
+| `/health`         | GET    | Public            | Liveness check                            |
 
 ### Headers for `/mcp`
 
@@ -106,7 +106,7 @@ curl -s "$MCP_SERVER_URL/health"
 ```
 
 ```json
-{"status":"healthy"}
+{ "status": "healthy" }
 ```
 
 ### Example: check OAuth status
@@ -117,7 +117,7 @@ curl -s -H "Authorization: Bearer $MCP_API_KEY" \
 ```
 
 ```json
-{"userId":42,"authenticated":true,"expiresAt":1783526622769}
+{ "userId": 42, "authenticated": true, "expiresAt": 1783526622769 }
 ```
 
 ### Example: start OAuth (use GET, not HEAD)
@@ -135,7 +135,7 @@ Expected: `HTTP 302` with `Location:` pointing to the CMS authorize page. Open t
 If another OAuth flow is already running for that user, the server returns `409`:
 
 ```json
-{"error":"OAuth already in progress for this user"}
+{ "error": "OAuth already in progress for this user" }
 ```
 
 ### Example: revoke a user
@@ -146,7 +146,7 @@ curl -s -X POST -H "Authorization: Bearer $MCP_API_KEY" \
 ```
 
 ```json
-{"revoked":true,"userId":42}
+{ "revoked": true, "userId": 42 }
 ```
 
 ### Example: MCP initialize
@@ -215,7 +215,7 @@ You can implement an MCP client in any language using JSON-RPC 2.0 over HTTP POS
   "params": {
     "protocolVersion": "2025-03-26",
     "capabilities": {},
-    "clientInfo": {"name": "my-client", "version": "1.0.0"}
+    "clientInfo": { "name": "my-client", "version": "1.0.0" }
   }
 }
 ```
@@ -266,11 +266,11 @@ Use this pattern for a standalone agent process — a Node service, Python scrip
 
 Store secrets in environment variables or a secrets manager:
 
-| Variable | Example |
-|----------|---------|
-| `MCP_SERVER_URL` | `https://mcp.example.com` |
-| `MCP_API_KEY` | hex secret from server operator |
-| `CMS_USER_ID` | `42` (fixed user) or resolved per job |
+| Variable         | Example                               |
+| ---------------- | ------------------------------------- |
+| `MCP_SERVER_URL` | `https://mcp.example.com`             |
+| `MCP_API_KEY`    | hex secret from server operator       |
+| `CMS_USER_ID`    | `42` (fixed user) or resolved per job |
 
 ### TypeScript / Node
 
@@ -323,12 +323,12 @@ Use this pattern when you build a browser-based chat interface backed by your ow
 
 ### Suggested API routes
 
-| Your route | Forwards to |
-|------------|-------------|
-| `GET /api/chat/oauth/status` | `GET /mcp-server/oauth/status?user_id=N` |
-| `GET /api/chat/oauth/start` | `GET /mcp-server/oauth/start?user_id=N` → redirect browser to `Location` |
-| `POST /api/chat/oauth/revoke` | `POST /mcp-server/oauth/revoke?user_id=N` |
-| `POST /api/chat/message` | `POST /mcp-server/mcp` (agent loop) |
+| Your route                    | Forwards to                                                              |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| `GET /api/chat/oauth/status`  | `GET /mcp-server/oauth/status?user_id=N`                                 |
+| `GET /api/chat/oauth/start`   | `GET /mcp-server/oauth/start?user_id=N` → redirect browser to `Location` |
+| `POST /api/chat/oauth/revoke` | `POST /mcp-server/oauth/revoke?user_id=N`                                |
+| `POST /api/chat/message`      | `POST /mcp-server/mcp` (agent loop)                                      |
 
 ### Streaming
 
@@ -342,10 +342,10 @@ If your AI chat UI lives inside the Concrete CMS dashboard, follow the web appli
 
 Store in package config (encrypt `mcp_api_key`):
 
-| Setting | Example |
-|---------|---------|
+| Setting          | Example                   |
+| ---------------- | ------------------------- |
 | `mcp_server_url` | `https://mcp.example.com` |
-| `mcp_api_key` | server-side secret |
+| `mcp_api_key`    | server-side secret        |
 
 ### User context
 
@@ -400,26 +400,26 @@ Tools map to Concrete CMS REST API operations. A user's tool access is limited b
 
 ## Client configuration
 
-| Variable | Where to set | Notes |
-|----------|--------------|-------|
-| `MCP_SERVER_URL` | App env / package config | Must match server `PUBLIC_BASE_URL` |
-| `MCP_API_KEY` | Server-side secrets only | Never in frontend code |
-| `CMS_USER_ID` | Per-request header | From session or config |
-| `PATH_PREFIX` | If server uses prefix | Prepend to all paths (e.g. `/ccm-mcp`) |
+| Variable         | Where to set             | Notes                                  |
+| ---------------- | ------------------------ | -------------------------------------- |
+| `MCP_SERVER_URL` | App env / package config | Must match server `PUBLIC_BASE_URL`    |
+| `MCP_API_KEY`    | Server-side secrets only | Never in frontend code                 |
+| `CMS_USER_ID`    | Per-request header       | From session or config                 |
+| `PATH_PREFIX`    | If server uses prefix    | Prepend to all paths (e.g. `/ccm-mcp`) |
 
 If the server uses `MCP_API_KEYS` with a user-bound key (`{"my-key": 42}`), the `X-Concrete-User-Id` header is optional for that key — see the [Security Guide](security.md).
 
 ## Error handling
 
-| Signal | Cause | Action |
-|--------|-------|--------|
-| HTTP 401 | Missing or invalid `MCP_API_KEY` | Fix server-side config |
-| HTTP 400 | Missing `X-Concrete-User-Id` | Send CMS user ID header |
-| HTTP 409 | OAuth already in progress | Show wait message; do not start another flow |
-| `authenticated: false` | User has not OAuth'd | Start OAuth flow |
-| OAuth callback 400 | Stale MCP `dist/`, modified authorize URL, MCP restarted mid-flow, or expired session | Rebuild MCP server; forward `/oauth/start` `Location` unchanged; retry within 10 minutes — see [Remote MCP Server Guide](remote-server.md#proxied-oauth-backend-clients) |
-| Tool error / CMS 401 | Token expired or revoked | Re-authorize via `/oauth/start` |
-| HTTP 404 from proxy | Missing reverse proxy route | See [Remote MCP Server Guide](remote-server.md) |
+| Signal                 | Cause                                                                                 | Action                                                                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| HTTP 401               | Missing or invalid `MCP_API_KEY`                                                      | Fix server-side config                                                                                                                                                   |
+| HTTP 400               | Missing `X-Concrete-User-Id`                                                          | Send CMS user ID header                                                                                                                                                  |
+| HTTP 409               | OAuth already in progress                                                             | Show wait message; do not start another flow                                                                                                                             |
+| `authenticated: false` | User has not OAuth'd                                                                  | Start OAuth flow                                                                                                                                                         |
+| OAuth callback 400     | Stale MCP `dist/`, modified authorize URL, MCP restarted mid-flow, or expired session | Rebuild MCP server; forward `/oauth/start` `Location` unchanged; retry within 10 minutes — see [Remote MCP Server Guide](remote-server.md#proxied-oauth-backend-clients) |
+| Tool error / CMS 401   | Token expired or revoked                                                              | Re-authorize via `/oauth/start`                                                                                                                                          |
+| HTTP 404 from proxy    | Missing reverse proxy route                                                           | See [Remote MCP Server Guide](remote-server.md)                                                                                                                          |
 
 ## Testing checklist
 

@@ -16,8 +16,7 @@ function enrichTokenError(error: unknown): Error {
   const wrapper = error as { message?: string; cause?: unknown }
   const inner = wrapper?.cause as { message?: string; cause?: unknown } | undefined
   const detail = inner?.cause as
-    | { claim?: string; expected?: unknown; claims?: Record<string, unknown> }
-    | undefined
+    { claim?: string; expected?: unknown; claims?: Record<string, unknown> } | undefined
 
   if (detail?.claim) {
     const actual = detail.claims?.[detail.claim]

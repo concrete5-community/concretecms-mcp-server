@@ -69,9 +69,9 @@ curl -X POST -H "Authorization: Bearer $MCP_API_KEY" \
 
 ## Headers every `/mcp` request needs
 
-| Header | Value |
-|--------|--------|
-| `Authorization` | `Bearer <MCP_API_KEY>` |
+| Header               | Value                                |
+| -------------------- | ------------------------------------ |
+| `Authorization`      | `Bearer <MCP_API_KEY>`               |
 | `X-Concrete-User-Id` | Your Concrete CMS user ID (e.g. `1`) |
 
 ### Optional: user-bound API key
@@ -98,11 +98,11 @@ Verified against ChatGPT desktop custom MCP connectors (Plugins → MCPs).
 2. Choose **Connect to a custom MCP**.
 3. Fill in:
 
-| Field | Value |
-|-------|--------|
-| Name | Concrete CMS (or any label) |
-| Type | **Streamable HTTP** (not STDIO) |
-| URL | `https://mcp.example.com/mcp` |
+| Field | Value                           |
+| ----- | ------------------------------- |
+| Name  | Concrete CMS (or any label)     |
+| Type  | **Streamable HTTP** (not STDIO) |
+| URL   | `https://mcp.example.com/mcp`   |
 
 4. Authentication and headers:
 
@@ -154,14 +154,14 @@ Authorize the CMS user on the server first, as above.
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix |
-|---------|--------------|-----|
-| Connector cannot connect | Wrong URL, TLS, or proxy | `curl https://mcp.example.com/health`; URL must include `/mcp` (and `PATH_PREFIX` if set) |
-| `401 Unauthorized` | Missing or wrong API key | Check Bearer token / `Authorization` header |
-| `400` missing user context | No `X-Concrete-User-Id` and key is not user-bound | Add the header or use `MCP_API_KEYS` with a numeric user ID |
-| Tools fail / not authenticated | CMS OAuth not completed for that user | Run `/oauth/start`, confirm `/oauth/status` |
-| Duplicate / flaky auth in ChatGPT | Bearer env var **and** `Authorization` header both set | Use one auth method only |
-| Path 404 | `PATH_PREFIX` mismatch | Use `https://cms.example.com/ccm-mcp/mcp` when `PATH_PREFIX=/ccm-mcp` |
+| Symptom                           | Likely cause                                           | Fix                                                                                       |
+| --------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| Connector cannot connect          | Wrong URL, TLS, or proxy                               | `curl https://mcp.example.com/health`; URL must include `/mcp` (and `PATH_PREFIX` if set) |
+| `401 Unauthorized`                | Missing or wrong API key                               | Check Bearer token / `Authorization` header                                               |
+| `400` missing user context        | No `X-Concrete-User-Id` and key is not user-bound      | Add the header or use `MCP_API_KEYS` with a numeric user ID                               |
+| Tools fail / not authenticated    | CMS OAuth not completed for that user                  | Run `/oauth/start`, confirm `/oauth/status`                                               |
+| Duplicate / flaky auth in ChatGPT | Bearer env var **and** `Authorization` header both set | Use one auth method only                                                                  |
+| Path 404                          | `PATH_PREFIX` mismatch                                 | Use `https://cms.example.com/ccm-mcp/mcp` when `PATH_PREFIX=/ccm-mcp`                     |
 
 ## Security recommendations
 

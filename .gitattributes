@@ -1,0 +1,7 @@
+# Normalize line endings to LF in the repository and in every working tree,
+# including the files Prettier does not format (Dockerfile, .env.example, ...).
+* text=auto eol=lf
+
+# Binary files: never touch them.
+*.png binary
+*.mcpb binary
