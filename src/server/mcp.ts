@@ -16,6 +16,7 @@ import {
 } from '../env.js'
 import { OPENAPI_SPEC_FILE } from '../paths.js'
 import { createPageTools } from '../tools/pageTools.js'
+import { applyGeneratedToolAnnotations } from '../tools/annotations.js'
 
 export interface McpServerOptions {
   transport?: 'stdio' | 'http'
@@ -61,6 +62,7 @@ export async function startMcpServer(
     )
 
     await openApiServer.start(httpTransport)
+    applyGeneratedToolAnnotations(openApiServer)
     console.error(
       `[concretecms-mcp] Remote MCP server running at ${publicBaseUrl}${mcpEndpointPath}`
     )
@@ -70,4 +72,5 @@ export async function startMcpServer(
 
   const stdioTransport = new StdioServerTransport()
   await openApiServer.start(stdioTransport)
+  applyGeneratedToolAnnotations(openApiServer)
 }

@@ -201,6 +201,10 @@ export function createPageTools(authProvider: AuthProvider): ExtraToolDefinition
         name: 'get_page_content',
         description:
           'Review a Concrete CMS page as a document. Returns sanitized HTML, raw HTML, and plain text. Prefer this over getPageById with includes=content when summarizing or reading page copy. Does not return areas/blocks.',
+        annotations: {
+          title: 'Get page content',
+          readOnlyHint: true,
+        },
         inputSchema: {
           type: 'object',
           properties: {
@@ -225,6 +229,12 @@ export function createPageTools(authProvider: AuthProvider): ExtraToolDefinition
         name: 'update_page_content',
         description:
           'Update page block content safely. Creates a new editable page version (PUT page), remaps block IDs, then updates each block (PUT area). Provide blockID values from the version you inspected. Does not approve the new version.',
+        annotations: {
+          title: 'Update page content',
+          readOnlyHint: false,
+          destructiveHint: true,
+          idempotentHint: false,
+        },
         inputSchema: {
           type: 'object',
           properties: {
