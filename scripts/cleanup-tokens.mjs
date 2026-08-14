@@ -14,9 +14,13 @@ process.env.CONCRETE_API_CLIENT_SECRET = process.env.CONCRETE_API_CLIENT_SECRET 
 process.env.CONCRETE_API_SCOPE = process.env.CONCRETE_API_SCOPE ?? 'account:read'
 
 const { cleanupExpiredTokens } = await import(`file://${join(projectRoot, 'dist/tokenStore.js')}`)
-const { cleanupStaleOAuthLocks } = await import(`file://${join(projectRoot, 'dist/auth/oauthLock.js')}`)
+const { cleanupStaleOAuthLocks } = await import(
+  `file://${join(projectRoot, 'dist/auth/oauthLock.js')}`
+)
 
 const locksRemoved = cleanupStaleOAuthLocks()
 const tokensRemoved = cleanupExpiredTokens()
 
-console.log(`Removed ${locksRemoved} stale OAuth lock(s) and ${tokensRemoved} expired token file(s).`)
+console.log(
+  `Removed ${locksRemoved} stale OAuth lock(s) and ${tokensRemoved} expired token file(s).`
+)

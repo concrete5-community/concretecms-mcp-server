@@ -108,7 +108,9 @@ export class UserTokenSession {
 
       console.error(`[concretecms-mcp] Access token refreshed for user ${this.userId}`)
     } catch (error) {
-      console.error(`[concretecms-mcp] Token refresh failed for user ${this.userId}: ${redactError(error)}`)
+      console.error(
+        `[concretecms-mcp] Token refresh failed for user ${this.userId}: ${redactError(error)}`
+      )
       throw error
     }
   }

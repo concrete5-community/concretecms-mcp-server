@@ -15,10 +15,10 @@ TOKEN_DIR/<siteKey>/{userId}.client.json
 - `<siteKey>` is a 16-character hash of `CONCRETE_CANONICAL_URL`, so one MCP install can connect to multiple Concrete CMS sites without clobbering tokens
 - Legacy flat files directly under `TOKEN_DIR/` are migrated into the site subdirectory on startup
 
-| File | Contents |
-|------|----------|
+| File                   | Contents                                                        |
+| ---------------------- | --------------------------------------------------------------- |
 | `{userId}.tokens.json` | Access token, refresh token, expiry, `obtained_at`, CMS user ID |
-| `{userId}.client.json` | OAuth client parameters (redirect URI, scope, PKCE state) |
+| `{userId}.client.json` | OAuth client parameters (redirect URI, scope, PKCE state)       |
 
 Legacy combined `{userId}.json` files are migrated to the split format on load.
 
@@ -103,7 +103,7 @@ X-Concrete-User-Id: <cms_user_id>
 If using `MCP_API_KEYS` with a user-bound key, the `X-Concrete-User-Id` header is optional:
 
 ```json
-{"personal-desktop-key": 42, "dashboard-backend-key": null}
+{ "personal-desktop-key": 42, "dashboard-backend-key": null }
 ```
 
 - A numeric value binds the API key to a fixed CMS user (personal remote clients)
@@ -128,14 +128,14 @@ Or delete the user's token files on the server and restart if needed.
 
 ## OAuth routes
 
-| Route | Authentication |
-|-------|----------------|
-| `/oauth/start` | `MCP_API_KEY` required (http mode) |
-| `/oauth/status` | `MCP_API_KEY` required |
-| `/oauth/revoke` | `MCP_API_KEY` required |
+| Route             | Authentication                           |
+| ----------------- | ---------------------------------------- |
+| `/oauth/start`    | `MCP_API_KEY` required (http mode)       |
+| `/oauth/status`   | `MCP_API_KEY` required                   |
+| `/oauth/revoke`   | `MCP_API_KEY` required                   |
 | `/oauth/callback` | Public (CMS redirect; protected by PKCE) |
-| `/health` | Public |
-| `/mcp` | `MCP_API_KEY` + user context required |
+| `/health`         | Public                                   |
+| `/mcp`            | `MCP_API_KEY` + user context required    |
 
 Rate limiting applies to OAuth routes (10 requests/minute per IP by default).
 

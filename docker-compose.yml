@@ -2,7 +2,7 @@ services:
   concretecms-mcp:
     build: .
     ports:
-      - "${HTTP_PORT:-3000}:3000"
+      - '${HTTP_PORT:-3000}:3000'
     environment:
       TRANSPORT_TYPE: http
       HTTP_HOST: 0.0.0.0

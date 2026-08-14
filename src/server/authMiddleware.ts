@@ -35,9 +35,7 @@ function matchesApiKey(provided: string, expected: string): boolean {
   return timingSafeEqual(providedBuffer, expectedBuffer)
 }
 
-function resolveApiKey(
-  token: string
-): { boundUserId: number | null } | null {
+function resolveApiKey(token: string): { boundUserId: number | null } | null {
   for (const entry of mcpApiKeys) {
     if (matchesApiKey(token, entry.key)) {
       return { boundUserId: entry.boundUserId }
@@ -82,11 +80,7 @@ function isRateLimited(key: string): boolean {
   return false
 }
 
-function resolveUserId(
-  req: IncomingMessage,
-  url: URL,
-  boundUserId: number | null
-): number | null {
+function resolveUserId(req: IncomingMessage, url: URL, boundUserId: number | null): number | null {
   if (boundUserId !== null) {
     return boundUserId
   }
@@ -111,11 +105,7 @@ function requiresApiKey(pathname: string): boolean {
   )
 }
 
-function handleProtectedRoute(
-  req: IncomingMessage,
-  res: ServerResponse,
-  url: URL
-): boolean {
+function handleProtectedRoute(req: IncomingMessage, res: ServerResponse, url: URL): boolean {
   const bearer = extractBearerToken(req)
   if (!bearer) {
     sendJson(res, 401, { error: 'Unauthorized' })

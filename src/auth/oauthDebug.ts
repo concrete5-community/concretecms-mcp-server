@@ -67,10 +67,7 @@ export function logOAuthCallbackFailure(failure: OAuthCallbackFailure): void {
 }
 
 export function formatOAuthFailureHtmlBody(failure: OAuthCallbackFailure): string {
-  const lines = [
-    `<h1>Authorization Failed</h1>`,
-    `<p>${escapeHtml(failure.message)}</p>`,
-  ]
+  const lines = [`<h1>Authorization Failed</h1>`, `<p>${escapeHtml(failure.message)}</p>`]
 
   if (oauthDebug) {
     lines.push(`<p><strong>Reason:</strong> <code>${escapeHtml(failure.reason)}</code></p>`)

@@ -78,8 +78,14 @@ const sampleTokens = {
 saveTokens('42', sampleTokens, sampleTokens.parameters)
 const loaded = await loadTokens('42')
 assert(loaded?.access_token === 'access-abc', 'encrypt/decrypt round-trip')
-assert(existsSync(join(cmsSiteDir, '42.tokens.json')), 'per-user tokens file created in site directory')
-assert(existsSync(join(cmsSiteDir, '42.client.json')), 'per-user client file created in site directory')
+assert(
+  existsSync(join(cmsSiteDir, '42.tokens.json')),
+  'per-user tokens file created in site directory'
+)
+assert(
+  existsSync(join(cmsSiteDir, '42.client.json')),
+  'per-user client file created in site directory'
+)
 
 const raw = readFileSync(join(cmsSiteDir, '42.tokens.json'), 'utf-8')
 const parsed = JSON.parse(raw)
@@ -112,7 +118,10 @@ const storeAReload = await importTokenStore({
   ...baseEnv({ TOKEN_DIR: multiSiteDir }),
   CONCRETE_CANONICAL_URL: siteA,
 })
-assert(storeAReload.loadTokens('local')?.access_token === 'access-abc', 'site A tokens remain isolated')
+assert(
+  storeAReload.loadTokens('local')?.access_token === 'access-abc',
+  'site A tokens remain isolated'
+)
 
 console.log('\nFlat token dir migration test')
 
@@ -139,7 +148,11 @@ writeFileSync(legacyFile, JSON.stringify(sampleTokens), { mode: 0o600 })
 
 const legacySiteDir = join(legacyTokenDir, siteKey('https://cms.example.com'))
 
-const migration = spawn('node', ['-e', `
+const migration = spawn(
+  'node',
+  [
+    '-e',
+    `
   process.env.TRANSPORT_TYPE = 'stdio';
   process.env.TOKEN_DIR = ${JSON.stringify(legacyTokenDir)};
   process.env.TOKEN_FILE = ${JSON.stringify(legacyFile)};
@@ -151,14 +164,22 @@ const migration = spawn('node', ['-e', `
     m.migrateLegacyTokens();
     process.exit(require('fs').existsSync(${JSON.stringify(join(legacySiteDir, 'local.tokens.json'))}) ? 0 : 1);
   });
-`], { cwd: projectRoot, stdio: 'inherit' })
+`,
+  ],
+  { cwd: projectRoot, stdio: 'inherit' }
+)
 
 await new Promise((resolve) => migration.on('close', resolve))
-assert(migration.exitCode === 0, 'legacy .tokens.json migrates to site-scoped local.tokens.json (stdio)')
+assert(
+  migration.exitCode === 0,
+  'legacy .tokens.json migrates to site-scoped local.tokens.json (stdio)'
+)
 
 console.log('\nAccount response parsing test')
 
-const { extractUserId } = await import(`file://${join(projectRoot, 'dist/auth/resolveUser.js')}?t=${Date.now()}`)
+const { extractUserId } = await import(
+  `file://${join(projectRoot, 'dist/auth/resolveUser.js')}?t=${Date.now()}`
+)
 
 assert(
   extractUserId({ data: { id: 1, username: 'admin' } }) === 1,

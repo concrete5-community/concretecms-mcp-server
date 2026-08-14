@@ -11,7 +11,9 @@ async function startStdioServer(authProvider: MultiUserAuthProvider): Promise<vo
   cleanupStaleOAuthLocks()
   cleanupExpiredTokens()
 
-  console.error('[concretecms-mcp] OAuth will run on first tool call if tokens are missing or expired')
+  console.error(
+    '[concretecms-mcp] OAuth will run on first tool call if tokens are missing or expired'
+  )
   await startMcpServer(authProvider, { transport: 'stdio' })
 }
 
@@ -25,7 +27,9 @@ async function startHttpServer(authProvider: MultiUserAuthProvider): Promise<voi
 
   console.error(`[concretecms-mcp] Remote MCP server ready. Authorize users via ${oauthStartPath}`)
   if (oauthDebug) {
-    console.error('[concretecms-mcp] OAUTH_DEBUG=1 — callback failures will include reason details in the browser')
+    console.error(
+      '[concretecms-mcp] OAUTH_DEBUG=1 — callback failures will include reason details in the browser'
+    )
   }
 }
 
