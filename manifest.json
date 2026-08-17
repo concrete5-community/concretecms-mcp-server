@@ -222,7 +222,7 @@
     "DEBUG_MAX_BODY": {
       "type": "number",
       "title": "Debug body limit",
-      "description": "Max number of characters logged for each request/response body in any debug output. Set to 0 to log full bodies without truncation (default: 2000)",
+      "description": "Max number of characters logged for each request/response body in any debug output. Set to 0 to omit bodies from the log entirely (default: 2000)",
       "required": false,
       "default": 2000,
       "min": 0,
