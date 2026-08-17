@@ -7,6 +7,7 @@ import {
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import type { Server } from 'node:http'
 import {
+  apiDebug,
   canonical_url,
   httpHost,
   httpPort,
@@ -65,7 +66,9 @@ export async function startMcpServer(
 
     await openApiServer.start(httpTransport)
     applyGeneratedToolAnnotations(openApiServer)
-    applyLibraryHttpDebug(openApiServer)
+    if (apiDebug) {
+      applyLibraryHttpDebug(openApiServer)
+    }
     log(`Remote MCP server running at ${publicBaseUrl}${mcpEndpointPath}`)
     log(`OAuth start URL: ${publicBaseUrl}${oauthStartPath}`)
     return
@@ -74,5 +77,7 @@ export async function startMcpServer(
   const stdioTransport = new StdioServerTransport()
   await openApiServer.start(stdioTransport)
   applyGeneratedToolAnnotations(openApiServer)
-  applyLibraryHttpDebug(openApiServer)
+  if (apiDebug) {
+    applyLibraryHttpDebug(openApiServer)
+  }
 }
