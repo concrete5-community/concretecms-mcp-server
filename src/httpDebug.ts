@@ -1,10 +1,10 @@
-import { apiDebug, debugMaxBody } from './env.js'
+import { debugMaxBody } from './env.js'
 import { log } from './log.js'
 
 const SENSITIVE_KEY = /password|passphrase|secret|token|authorization|credential/i
 
 /** Recursively replace values of sensitive-looking keys with a placeholder. */
-export function redactSensitive(value: unknown): unknown {
+function redactSensitive(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(redactSensitive)
   }
@@ -30,7 +30,7 @@ function truncate(text: string): string {
  * truncate. Accepts either a raw JSON string (fetch) or an already-parsed value
  * (axios), and falls back to raw text when a string is not JSON.
  */
-export function formatBodyForLog(body: unknown): string {
+function formatBodyForLog(body: unknown): string {
   if (typeof body === 'string') {
     try {
       return truncate(JSON.stringify(redactSensitive(JSON.parse(body))))
@@ -41,16 +41,13 @@ export function formatBodyForLog(body: unknown): string {
   return truncate(JSON.stringify(redactSensitive(body)))
 }
 
-/** Log an outgoing HTTP request. No-op unless CONCRETE_API_DEBUG is on. */
 export function logHttpRequest(method: string, url: string, body?: unknown): void {
-  if (!apiDebug) return
   log(`HTTP request: ${method} ${url}`)
   if (debugMaxBody > 0 && body !== undefined) {
     log(`HTTP request body: ${formatBodyForLog(body)}`)
   }
 }
 
-/** Log an HTTP response. No-op unless CONCRETE_API_DEBUG is on. */
 export function logHttpResponse(
   method: string,
   target: string,
@@ -58,7 +55,6 @@ export function logHttpResponse(
   ms: number,
   body?: unknown
 ): void {
-  if (!apiDebug) return
   log(`HTTP response: ${method} ${target} ${status} (${ms}ms)`)
   if (debugMaxBody > 0 && body !== undefined && body !== null && body !== '') {
     log(`HTTP response body: ${formatBodyForLog(body)}`)
@@ -122,8 +118,6 @@ function buildUrl(config: AxiosConfigLike): string {
 }
 
 export function applyLibraryHttpDebug(server: unknown): void {
-  if (!apiDebug) return
-
   const axiosInstance = (server as { apiClient?: { axiosInstance?: AxiosInstanceLike } })?.apiClient
     ?.axiosInstance
 

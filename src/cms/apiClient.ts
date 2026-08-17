@@ -1,5 +1,5 @@
 import type { AuthProvider } from '@ivotoby/openapi-mcp-server'
-import { canonical_url } from '../env.js'
+import { canonical_url, apiDebug } from '../env.js'
 import { logHttpRequest, logHttpResponse } from '../httpDebug.js'
 
 export class CmsApiError extends Error {
@@ -54,14 +54,17 @@ export class CmsApiClient {
       headers['Content-Type'] = 'application/json'
       init.body = JSON.stringify(body)
     }
-
-    logHttpRequest(method, url.toString(), method !== 'GET' ? body : undefined)
+    if (apiDebug) {
+      logHttpRequest(method, url.toString(), method !== 'GET' ? body : undefined)
+    }
 
     const startedAt = Date.now()
     const response = await fetch(url, init)
     const text = await response.text()
 
-    logHttpResponse(method, url.pathname, response.status, Date.now() - startedAt, text)
+    if (apiDebug) {
+      logHttpResponse(method, url.pathname, response.status, Date.now() - startedAt, text)
+    }
 
     if (!response.ok) {
       throw new CmsApiError(response.status, text.slice(0, 2000), method, url.pathname)
