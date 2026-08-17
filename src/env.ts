@@ -156,8 +156,8 @@ export const oauthDebug = optionalBoolEnv('OAUTH_DEBUG', false)
 // and the bearer token is never logged. Off by default; noisy when on.
 export const apiDebug = optionalBoolEnv('CONCRETE_API_DEBUG', false)
 
-// Max length (characters) for any logged request/response body, shared across
-// all debug output. 0 disables truncation (log the full body).
+// Max length (characters) for any logged request/response body, shared across all debug output.
+// 0 (or less) omits bodies from the log entirely; N > 0 logs up to N characters (bodies longer than that are truncated).
 export const debugMaxBody = optionalIntEnv('DEBUG_MAX_BODY', 2000)
 
 // Allow the Concrete server to be reached over plain HTTP. openid-client v6

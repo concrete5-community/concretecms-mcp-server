@@ -45,7 +45,7 @@ export function formatBodyForLog(body: unknown): string {
 export function logHttpRequest(method: string, url: string, body?: unknown): void {
   if (!apiDebug) return
   log(`HTTP request: ${method} ${url}`)
-  if (body !== undefined) {
+  if (debugMaxBody > 0 && body !== undefined) {
     log(`HTTP request body: ${formatBodyForLog(body)}`)
   }
 }
@@ -60,7 +60,7 @@ export function logHttpResponse(
 ): void {
   if (!apiDebug) return
   log(`HTTP response: ${method} ${target} ${status} (${ms}ms)`)
-  if (body !== undefined && body !== null && body !== '') {
+  if (debugMaxBody > 0 && body !== undefined && body !== null && body !== '') {
     log(`HTTP response body: ${formatBodyForLog(body)}`)
   }
 }
