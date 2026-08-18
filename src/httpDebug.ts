@@ -33,12 +33,12 @@ function truncate(text: string): string {
 function formatBodyForLog(body: unknown): string {
   if (typeof body === 'string') {
     try {
-      return truncate(JSON.stringify(redactSensitive(JSON.parse(body))))
+      return truncate(JSON.stringify(redactSensitive(JSON.parse(body)), null, 2))
     } catch {
       return truncate(body)
     }
   }
-  return truncate(JSON.stringify(redactSensitive(body)))
+  return truncate(JSON.stringify(redactSensitive(body), null, 2))
 }
 
 export enum DebugName {
@@ -65,16 +65,16 @@ export function getHttpLogger(label: DebugName): HttpDebugLogger {
   const logger: HttpDebugLogger = {
     logRequest(method, url, body) {
       const id = ++counter
-      log(`${label} #${id} - Request: ${method} ${url}`)
+      log(`${label} #${id}: ${method} ${url}`)
       if (debugMaxBody > 0 && body !== undefined) {
-        log(`${label} #${id} - Request body: ${formatBodyForLog(body)}`)
+        log(`${label} #${id} - Request body:\n${formatBodyForLog(body)}`)
       }
       return id
     },
     logResponse(id, status, ms, body) {
       log(`${label} #${id} - Response: ${status} (${ms}ms)`)
       if (debugMaxBody > 0 && body !== undefined && body !== null && body !== '') {
-        log(`${label} #${id} - Response body: ${formatBodyForLog(body)}`)
+        log(`${label} #${id} - Response body:\n${formatBodyForLog(body)}`)
       }
     },
   }
