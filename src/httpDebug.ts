@@ -41,24 +41,45 @@ function formatBodyForLog(body: unknown): string {
   return truncate(JSON.stringify(redactSensitive(body)))
 }
 
-export function logHttpRequest(method: string, url: string, body?: unknown): void {
-  log(`HTTP request: ${method} ${url}`)
-  if (debugMaxBody > 0 && body !== undefined) {
-    log(`HTTP request body: ${formatBodyForLog(body)}`)
-  }
+export enum DebugName {
+  ApiCall = 'API call',
 }
 
-export function logHttpResponse(
-  method: string,
-  target: string,
-  status: number,
-  ms: number,
-  body?: unknown
-): void {
-  log(`HTTP response: ${method} ${target} ${status} (${ms}ms)`)
-  if (debugMaxBody > 0 && body !== undefined && body !== null && body !== '') {
-    log(`HTTP response body: ${formatBodyForLog(body)}`)
+interface HttpDebugLogger {
+  /** Log the request and return its correlation id, to pass to logResponse. */
+  logRequest(method: string, url: string, body?: unknown): number
+  /** Log the response; method/target are on the matching request line. */
+  logResponse(id: number, status: number, ms: number, body?: unknown): void
+}
+
+const httpLoggers: Map<DebugName, HttpDebugLogger> = new Map()
+
+// Returns a request/response logger whose lines group under "<label> #N - ...".
+export function getHttpLogger(label: DebugName): HttpDebugLogger {
+  const existing = httpLoggers.get(label)
+  if (existing) {
+    return existing
   }
+
+  let counter: number = 0
+  const logger: HttpDebugLogger = {
+    logRequest(method, url, body) {
+      const id = ++counter
+      log(`${label} #${id} - Request: ${method} ${url}`)
+      if (debugMaxBody > 0 && body !== undefined) {
+        log(`${label} #${id} - Request body: ${formatBodyForLog(body)}`)
+      }
+      return id
+    },
+    logResponse(id, status, ms, body) {
+      log(`${label} #${id} - Response: ${status} (${ms}ms)`)
+      if (debugMaxBody > 0 && body !== undefined && body !== null && body !== '') {
+        log(`${label} #${id} - Response body: ${formatBodyForLog(body)}`)
+      }
+    },
+  }
+  httpLoggers.set(label, logger)
+  return logger
 }
 
 // --- axios interceptors for the OpenAPI-generated tools -----------------------
@@ -76,6 +97,7 @@ interface AxiosConfigLike {
   params?: Record<string, unknown>
   data?: unknown
   __debugStart?: number
+  __debugSeq?: number
 }
 
 interface AxiosResponseLike {
@@ -117,7 +139,7 @@ function buildUrl(config: AxiosConfigLike): string {
   return url
 }
 
-export function applyLibraryHttpDebug(server: unknown): void {
+export function applyLibraryHttpDebug(debugName: DebugName, server: unknown): void {
   const axiosInstance = (server as { apiClient?: { axiosInstance?: AxiosInstanceLike } })?.apiClient
     ?.axiosInstance
 
@@ -126,28 +148,28 @@ export function applyLibraryHttpDebug(server: unknown): void {
     return
   }
 
+  const httpLog = getHttpLogger(debugName)
+
   axiosInstance.interceptors.request.use((config) => {
     config.__debugStart = Date.now()
     const method = (config.method ?? 'get').toUpperCase()
     // GET query params are already in the URL; other verbs carry a body in `data`.
-    logHttpRequest(method, buildUrl(config), config.data)
+    config.__debugSeq = httpLog.logRequest(method, buildUrl(config), config.data)
     return config
   })
 
   axiosInstance.interceptors.response.use(
     (response) => {
-      const method = (response.config.method ?? 'get').toUpperCase()
       const ms = Date.now() - (response.config.__debugStart ?? Date.now())
-      logHttpResponse(method, response.config.url ?? '', response.status, ms, response.data)
+      httpLog.logResponse(response.config.__debugSeq ?? 0, response.status, ms, response.data)
       return response
     },
     (error: unknown) => {
       const err = error as AxiosErrorLike
       if (err.response) {
         const config = err.response.config ?? err.config ?? {}
-        const method = (config.method ?? 'get').toUpperCase()
         const ms = Date.now() - (config.__debugStart ?? Date.now())
-        logHttpResponse(method, config.url ?? '', err.response.status, ms, err.response.data)
+        httpLog.logResponse(config.__debugSeq ?? 0, err.response.status, ms, err.response.data)
       }
       return Promise.reject(error)
     }
