@@ -1,6 +1,6 @@
 import type { AuthProvider } from '@ivotoby/openapi-mcp-server'
 import { canonical_url, apiDebug } from '../env.js'
-import { logHttpRequest, logHttpResponse } from '../httpDebug.js'
+import { DebugName, getHttpLogger } from '../httpDebug.js'
 
 export class CmsApiError extends Error {
   readonly status: number
@@ -54,17 +54,15 @@ export class CmsApiClient {
       headers['Content-Type'] = 'application/json'
       init.body = JSON.stringify(body)
     }
-    if (apiDebug) {
-      logHttpRequest(method, url.toString(), method !== 'GET' ? body : undefined)
-    }
+    const httpLog = apiDebug ? getHttpLogger(DebugName.ApiCall) : undefined
+    const requestId =
+      httpLog?.logRequest(method, url.toString(), method !== 'GET' ? body : undefined) ?? 0
 
     const startedAt = Date.now()
     const response = await fetch(url, init)
     const text = await response.text()
 
-    if (apiDebug) {
-      logHttpResponse(method, url.pathname, response.status, Date.now() - startedAt, text)
-    }
+    httpLog?.logResponse(requestId, response.status, Date.now() - startedAt, text)
 
     if (!response.ok) {
       throw new CmsApiError(response.status, text.slice(0, 2000), method, url.pathname)

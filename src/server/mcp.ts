@@ -3,7 +3,9 @@ import {
   OpenAPIServer,
   AuthProvider,
   StreamableHttpServerTransport,
+  OpenAPIMCPServerConfig,
 } from '@ivotoby/openapi-mcp-server'
+import { DebugName } from '../httpDebug.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import type { Server } from 'node:http'
 import {
@@ -33,7 +35,7 @@ export async function startMcpServer(
   const transport = options.transport ?? transportType
   log(`Starting MCP server (${transport} transport)...`)
 
-  const openApiServerConfig = {
+  const openApiServerConfig: OpenAPIMCPServerConfig = {
     name: 'Concrete CMS',
     version: '1.0.0',
     apiBaseUrl: canonical_url,
@@ -67,7 +69,7 @@ export async function startMcpServer(
     await openApiServer.start(httpTransport)
     applyGeneratedToolAnnotations(openApiServer)
     if (apiDebug) {
-      applyLibraryHttpDebug(openApiServer)
+      applyLibraryHttpDebug(DebugName.ApiCall, openApiServer)
     }
     log(`Remote MCP server running at ${publicBaseUrl}${mcpEndpointPath}`)
     log(`OAuth start URL: ${publicBaseUrl}${oauthStartPath}`)
@@ -78,6 +80,6 @@ export async function startMcpServer(
   await openApiServer.start(stdioTransport)
   applyGeneratedToolAnnotations(openApiServer)
   if (apiDebug) {
-    applyLibraryHttpDebug(openApiServer)
+    applyLibraryHttpDebug(DebugName.ApiCall, openApiServer)
   }
 }
