@@ -22,7 +22,7 @@ import { OPENAPI_SPEC_FILE } from '../paths.js'
 import { createPageTools } from '../tools/pageTools.js'
 import { applyGeneratedToolAnnotations } from '../tools/annotations.js'
 import { applyLibraryHttpDebug } from '../httpDebug.js'
-import { fetchLiveOpenApiSpec } from '../cms/openApiSpec.js'
+import { fetchLiveOpenApiSpec, buildServerInstructions } from '../cms/openApiSpec.js'
 
 export interface McpServerOptions {
   transport?: 'stdio' | 'http'
@@ -45,6 +45,9 @@ export async function startMcpServer(
       : 'Using the bundled OpenAPI spec (openapi.yml)'
   )
 
+  // When the live spec exposes the usage guide, point agents at it.
+  const instructions = liveSpec ? buildServerInstructions(liveSpec) : undefined
+
   const openApiServerConfig: OpenAPIMCPServerConfig = {
     name: 'Concrete CMS',
     version: '1.0.0',
@@ -54,6 +57,7 @@ export async function startMcpServer(
     openApiSpec: liveSpec ? '' : OPENAPI_SPEC_FILE,
     specInputMethod: liveSpec ? 'inline' : 'file',
     inlineSpecContent: liveSpec ?? undefined,
+    instructions,
     transportType: transport,
     httpPort,
     httpHost,
