@@ -22,8 +22,6 @@ jobs:
         run: npm ci
       - name: Lint check
         run: npm run lint:check
-      - name: Build
-        run: npm run build
       - name: Verify OAuth session binding
         run: npm run verify:oauth
       - name: Verify security
@@ -35,6 +33,6 @@ jobs:
       - name: Validate MCPB manifest.json
         run: npx mcpb validate manifest.json
       - name: Create MCPB file
-        run: npx mcpb pack . concretecms-mcp-server.mcpb
+        run: npm run pack
       - name: Inspect MCPB file
         run: npx mcpb info concretecms-mcp-server.mcpb
