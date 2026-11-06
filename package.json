@@ -28,7 +28,7 @@
   "description": "",
   "dependencies": {
     "@ivotoby/openapi-mcp-server": "^1.17.0",
-    "@modelcontextprotocol/sdk": "^1.30.0",
+    "@modelcontextprotocol/sdk": "^1.32.0",
     "openid-client": "^6.8.2"
   },
   "devDependencies": {
