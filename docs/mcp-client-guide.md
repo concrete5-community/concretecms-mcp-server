@@ -1,8 +1,14 @@
-# Building an MCP Client for Concrete CMS
+# Developer guide: build an application that uses the connector
 
-This guide is for **developers** building an MCP client or AI agent that connects to a remote Concrete CMS MCP server over HTTP.
+This page explains how to write an application, or an AI agent, that uses a connector installed on a server.
+It is for developers.
 
-It covers the HTTP API, per-user OAuth, MCP protocol usage, implementation patterns, and agent loops. It does not cover MCP server deployment (see the [Remote MCP Server Guide](remote-server.md)) or end-user desktop clients such as ChatGPT / Claude Desktop → remote (see [Connect Local MCP Clients to a Remote Server](local-clients.md)). For local stdio Claude Desktop, see the [main README](../README.md).
+It covers the HTTP API, the authorization of the users, the usage of the MCP protocol, some implementation patterns, and agent loops.
+It does not cover:
+
+- how to install the connector on a server: see [Remote server](remote-server.md)
+- how to connect an existing AI agent, such as Claude Desktop or ChatGPT, to a connector installed on a server: see [Connect an AI agent on your computer to a remote connector](local-clients.md)
+- how to run the connector on your computer: see [Local configuration](local-setup.md)
 
 ## Who this is for
 
@@ -25,7 +31,7 @@ Your application owns the conversation loop. The MCP server owns CMS token stora
 
 ## Prerequisites
 
-1. A deployed remote MCP server — [Remote MCP Server Guide](remote-server.md)
+1. A deployed remote MCP server — [Remote server guide](remote-server.md)
 2. Reverse proxy routes for `/mcp`, `/oauth/*`, and `/health`
 3. A Concrete CMS API integration with redirect URI `${MCP_SERVER_URL}/oauth/callback`
 4. `MCP_API_KEY` issued by the server operator (stored server-side in your app only)
@@ -380,7 +386,7 @@ packages/your_ai_agent/
 
 1. On page load, call your controller → `/oauth/status`
 2. If not authenticated, show "Connect your account" linking to your controller → `/oauth/start`
-3. Your controller calls MCP `GET /oauth/start?user_id=N` server-side with `Authorization: Bearer <MCP_API_KEY>`, then redirects the browser to the MCP response **`Location` URL unchanged** (see [Proxied OAuth](remote-server.md#proxied-oauth-backend-clients) in the remote server guide)
+3. Your controller calls MCP `GET /oauth/start?user_id=N` server-side with `Authorization: Bearer <MCP_API_KEY>`, then redirects the browser to the MCP response **`Location` URL unchanged** (see [Proxied OAuth](proxied-oauth.md))
 4. After callback, poll status and enable the chat UI
 
 ## AI agent loop
@@ -411,15 +417,15 @@ If the server uses `MCP_API_KEYS` with a user-bound key (`{"my-key": 42}`), the 
 
 ## Error handling
 
-| Signal                 | Cause                                                                                 | Action                                                                                                                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| HTTP 401               | Missing or invalid `MCP_API_KEY`                                                      | Fix server-side config                                                                                                                                                   |
-| HTTP 400               | Missing `X-Concrete-User-Id`                                                          | Send CMS user ID header                                                                                                                                                  |
-| HTTP 409               | OAuth already in progress                                                             | Show wait message; do not start another flow                                                                                                                             |
-| `authenticated: false` | User has not OAuth'd                                                                  | Start OAuth flow                                                                                                                                                         |
-| OAuth callback 400     | Stale MCP `dist/`, modified authorize URL, MCP restarted mid-flow, or expired session | Rebuild MCP server; forward `/oauth/start` `Location` unchanged; retry within 10 minutes — see [Remote MCP Server Guide](remote-server.md#proxied-oauth-backend-clients) |
-| Tool error / CMS 401   | Token expired or revoked                                                              | Re-authorize via `/oauth/start`                                                                                                                                          |
-| HTTP 404 from proxy    | Missing reverse proxy route                                                           | See [Remote MCP Server Guide](remote-server.md)                                                                                                                          |
+| Signal                 | Cause                                                                                 | Action                                                                                                                           |
+| ---------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| HTTP 401               | Missing or invalid `MCP_API_KEY`                                                      | Fix server-side config                                                                                                           |
+| HTTP 400               | Missing `X-Concrete-User-Id`                                                          | Send CMS user ID header                                                                                                          |
+| HTTP 409               | OAuth already in progress                                                             | Show wait message; do not start another flow                                                                                     |
+| `authenticated: false` | User has not OAuth'd                                                                  | Start OAuth flow                                                                                                                 |
+| OAuth callback 400     | Stale MCP `dist/`, modified authorize URL, MCP restarted mid-flow, or expired session | Rebuild MCP server; forward `/oauth/start` `Location` unchanged; retry within 10 minutes — see [Proxied OAuth](proxied-oauth.md) |
+| Tool error / CMS 401   | Token expired or revoked                                                              | Re-authorize via `/oauth/start`                                                                                                  |
+| HTTP 404 from proxy    | Missing reverse proxy route                                                           | See [Remote server guide](remote-server.md)                                                                                      |
 
 ## Testing checklist
 
@@ -435,7 +441,7 @@ If the server uses `MCP_API_KEYS` with a user-bound key (`{"my-key": 42}`), the 
 
 ## Related documentation
 
-- [Remote MCP Server Guide](remote-server.md) — deployment, nginx, environment variables
+- [Remote server guide](remote-server.md) — deployment, nginx, environment variables
 - [Security Guide](security.md) — trust model, encrypted tokens, revocation
 - [MCP Streamable HTTP specification](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports)
 - [Concrete CMS REST API](https://documentation.concretecms.org/9-x/developers/rest-api/introduction)

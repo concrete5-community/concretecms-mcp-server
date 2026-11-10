@@ -8,115 +8,22 @@ A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for [C
 
 ## Installation
 
-### Enable API in Concrete CMS
+There are two ways to use this connector.
+In both cases your Concrete CMS site can be anywhere.
 
-Since the MCP server uses the Concrete CMS API, you need to enable it in your Concrete CMS installation first.
-The [Concrete CMS documentation](https://documentation.concretecms.org/9-x/developers/rest-api/introduction) provides an introduction to the REST API and to its configuration.
+### 1. Local configuration only
 
-When you create the API Integration in Concrete CMS (_System & Settings_ > _API_ > _Integrations_), you have to set the **Redirect URI** to the address where the MCP server receives the OAuth callback.
+The connector runs on your computer.
 
-If you run the MCP server locally (for example with Claude Desktop, or with the prebuilt `.mcpb` extension), the redirect URI is:
+See **[Local configuration](docs/local-setup.md)**.
 
-```
-http://localhost:3000/callback
-```
+### 2. Remote server
 
-`3000` is the default port: if you customize it with the `HTTP_PORT` setting, adjust the redirect URI accordingly.
+The connector runs on a server: always on, and shared by several users.
 
-If you instead run the MCP server remotely (HTTP transport), the redirect URI is `${PUBLIC_BASE_URL}/oauth/callback` — see the [Remote MCP Server Guide](docs/remote-server.md) for the details.
-
-Take note of the resulting **Client ID** and **Client Secret**: you'll need them when configuring the MCP server (see [Settings](#settings) below).
-
-### Install the MCP Server
-
-#### Via a prebuilt extension
-
-The easiest way to use the Concrete CMS MCP Server with Claude Desktop is to install the prebuilt `.mcpb` extension:
-
-1. Go to the [Releases page](https://github.com/concrete5-community/concretecms-mcp-server/releases) and download the latest `concretecms-mcp-server.mcpb` file.
-2. In Claude Desktop, navigate to _Settings_ > _Extensions_.
-3. Click _Advanced settings_.
-4. In the _Extension Developer_ section, click the _Install Extension_ button and select the downloaded `concretecms-mcp-server.mcpb` file.
-
-Claude Desktop will then ask you for the configuration (Concrete CMS URL, API client ID and secret, and scopes). See [Settings](#settings) below for what to enter.
-
-#### From source
-
-You have to clone this repo and compile it:
-
-```bash
-git clone https://github.com/concrete5-community/concretecms-mcp-server.git
-cd concretecms-mcp-server
-npm ci && npm run build
-```
-
-If you use Claude Desktop:
-
-1. Navigate to _Settings_ > _Extensions_
-2. Click _Advanced settings_
-3. In the _Extension Developer_ section, click _Install Unpacked Extension_
-4. Choose the `concretecms-mcp-server` directory
-
-You can also add this MCP server via JSON. For example:
-
-```json
-{
-  "mcpServers": {
-    "concretecms": {
-      "command": "node",
-      "args": ["/path/to/concretecms-mcp-server/dist/index.js"],
-      "env": {
-        "CONCRETE_CANONICAL_URL": "https://your-concrete.example",
-        "CONCRETE_API_CLIENT_ID": "YOUR_API_CLIENT_ID",
-        "CONCRETE_API_CLIENT_SECRET": "YOUR_API_CLIENT_SECRET",
-        "CONCRETE_API_SCOPE": "account:read system:info:read"
-      }
-    }
-  }
-}
-```
-
-This uses the standard `mcpServers` format understood by most MCP clients (Claude Desktop, Cursor, Cline, and others).
-It goes in that client's MCP configuration file; if the file already defines other servers, add `concretecms` as another entry under `mcpServers` rather than replacing the whole object.
-The exact file and its location depend on the client — check the client's documentation.
-For Claude Desktop, open it via _Settings_ > _Developer_ > _Edit Config_ (this creates the file if it does not exist yet), or edit `claude_desktop_config.json` directly (`%APPDATA%\Claude\` on Windows, `~/Library/Application Support/Claude/` on macOS).
-
-Restart the client after saving.
+See **[Remote server](docs/remote-server.md)**.
 
 ## Usage
-
-### Settings
-
-- Set `CONCRETE_CANONICAL_URL` to the URL of your Concrete CMS installation.
-- Set `CONCRETE_API_CLIENT_ID` and `CONCRETE_API_CLIENT_SECRET` to the credentials of a registered API integration.
-- Set `CONCRETE_API_SCOPE` to the scopes you want to request. You can find a list of available scopes from `https://your-concrete.example/index.php/dashboard/system/api/scopes`.
-
-After you've configured the MCP server, please restart Claude Desktop. On the first tool call, it will open an authorization window — sign in and authorize the requested scopes.
-Now you should be able to get information about your Concrete CMS in a chat. A refresh token will be saved under `~/.concretecms-mcp/tokens/<site>/local.tokens.json` (one directory per `CONCRETE_CANONICAL_URL`), so you don't need to sign in again.
-
-Use separate MCP server entries in Claude Desktop for each Concrete CMS site — each site's tokens are stored independently.
-
-Optionally set `TOKEN_ENCRYPTION_KEY` in the `env` block to encrypt tokens at rest. See the **[Security Guide](docs/security.md)** for details.
-
-For more information about local MCP servers, please refer to the [Claude Desktop documentation](https://modelcontextprotocol.io/docs/develop/connect-local-servers).
-
-### Security
-
-OAuth refresh tokens are stored on disk under `~/.concretecms-mcp/tokens/<site>/` by default (namespaced per `CONCRETE_CANONICAL_URL`). See the **[Security Guide](docs/security.md)** for the threat model, `chmod 600` behavior, encryption, cleanup commands, and remote deployment guidance.
-
-### Run as a remote MCP server
-
-To host the MCP server on a remote Linux server, see the **[Remote MCP Server Guide](docs/remote-server.md)**.
-
-It covers systemd deployment, reverse proxy setup, OAuth configuration, and Docker as an alternative.
-
-To connect a **local desktop client** (ChatGPT Streamable HTTP, Claude Desktop via `mcp-remote`, or another remote MCP client) to that server, see **[Connect Local MCP Clients to a Remote Server](docs/local-clients.md)**.
-
-### For developers: build an MCP client or AI agent
-
-If you are building a programmatic MCP client or AI agent (backend service, web app with chat UI, or Concrete CMS package) that connects to a remote MCP server over HTTP, see the **[MCP Client Developer Guide](docs/mcp-client-guide.md)**.
-
-It covers the HTTP API, per-user OAuth, agent loops, and implementation patterns. For end-user desktop apps talking to a remote server, see [docs/local-clients.md](docs/local-clients.md). For local stdio Claude Desktop, use the section above.
 
 ### Use your own OpenAPI specification
 
@@ -152,6 +59,21 @@ In addition to OpenAPI-generated tools, the server exposes helpers for common pa
 Prefer these when reviewing or editing page copy. Use the raw OpenAPI tools (`getPageById`, `updateBlockInPageArea`, etc.) for lower-level control.
 
 Required OAuth scopes for the update helper: `pages:read`, `pages:update`, `pages:areas:update_blocks`.
+
+## Documentation
+
+- [Local configuration](docs/local-setup.md): how to run the connector on your computer
+- [Remote server](docs/remote-server.md): how to install the connector on a server
+- [Set up the Concrete CMS API](docs/concrete-api.md): what to configure in your Concrete CMS site
+- [Configuration reference](docs/configuration.md): all the settings of the connector, and when they are needed
+- [Connect an AI agent on your computer to a remote connector](docs/local-clients.md): how to use a connector installed on a server from Claude Desktop, ChatGPT, and others
+- [Security](docs/security.md): how the tokens and the keys are stored, and how to use the connector safely
+
+For developers:
+
+- [Developer guide: build an application that uses the connector](docs/mcp-client-guide.md)
+- [Developer guide: authorize the users from your application](docs/proxied-oauth.md)
+- [Try the remote connector on your computer](docs/remote-server-local-test.md)
 
 ## ToDos
 

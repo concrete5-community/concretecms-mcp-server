@@ -1,120 +1,28 @@
-# Connect Local MCP Clients to a Remote Server
+# Connect an AI agent on your computer to a remote connector
 
-Use this guide when a **desktop MCP client** (ChatGPT, Claude Desktop, or another Streamable HTTP client) should talk to a Concrete CMS MCP server you already host remotely.
+This page explains how to configure an AI agent that runs on your computer (for example Claude Desktop or ChatGPT) to use a connector installed on a server.
+It is for the people who use the connector: to install it on a server, see [Remote server](remote-server.md).
 
-For deploying the remote server, see the **[Remote MCP Server Guide](remote-server.md)**.
+If the connector should run on your computer too, see [Local configuration](local-setup.md).
+If you are building your own application, see the [Developer guide](mcp-client-guide.md).
 
-For running the MCP server as a local stdio process (Claude Desktop spawning `node dist/index.js`), see the **[main README](../README.md)**.
+## What you need
 
-For building your own HTTP agent or CMS package, see the **[MCP Client Developer Guide](mcp-client-guide.md)**.
+Ask who manages the connector for:
 
-## Prerequisites
+- the address of the connector for the AI agents, for example `https://mcp.example.com/mcp`
+- the key to use
+- your user ID in Concrete CMS (you do not need it if you received a personal key)
 
-1. A remote MCP server with `TRANSPORT_TYPE=http` and a public HTTPS URL
-2. `/health`, `/mcp`, and `/oauth/*` reachable through your reverse proxy
-3. An MCP API key (`MCP_API_KEY` or an entry in `MCP_API_KEYS`)
-4. Your Concrete CMS user ID (Dashboard → members, or the ID you pass to `/oauth/start`)
+You must also be authorized to use the connector: see [Authorize the users](remote-server.md#authorize-the-users).
+Until then your AI agent can connect, but its requests fail.
 
-Confirm the server is up:
+## Claude Desktop
 
-```bash
-curl https://mcp.example.com/health
-```
+The JSON configuration file of Claude Desktop can only start programs on your computer.
+To reach a remote connector it needs the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge, which requires [Node.js](https://nodejs.org/en/download) on your computer.
 
-Expected:
-
-```json
-{ "status": "healthy" }
-```
-
-If you use `PATH_PREFIX=/ccm-mcp`, include that prefix in every path below (for example `https://cms.example.com/ccm-mcp/mcp`).
-
-## Authorize your CMS user first
-
-Desktop clients authenticate to the **MCP** server with an API key. They do **not** run Concrete CMS OAuth for you.
-
-Authorize once per CMS user (or again after revoke / token loss):
-
-```bash
-export MCP_SERVER_URL=https://mcp.example.com
-export MCP_API_KEY=your-mcp-api-key
-export CMS_USER_ID=1
-
-# Open the Location URL in a browser, sign in as that CMS user, approve scopes
-curl -s -D - -o /dev/null -H "Authorization: Bearer $MCP_API_KEY" \
-  "$MCP_SERVER_URL/oauth/start?user_id=$CMS_USER_ID"
-```
-
-Confirm:
-
-```bash
-curl -s -H "Authorization: Bearer $MCP_API_KEY" \
-  "$MCP_SERVER_URL/oauth/status?user_id=$CMS_USER_ID"
-```
-
-Expected:
-
-```json
-{ "userId": 1, "authenticated": true, "expiresAt": 1710000000000 }
-```
-
-Until `authenticated` is `true`, tool calls from ChatGPT or Claude will fail even if the MCP connector connects.
-
-To disconnect later:
-
-```bash
-curl -X POST -H "Authorization: Bearer $MCP_API_KEY" \
-  "$MCP_SERVER_URL/oauth/revoke?user_id=$CMS_USER_ID"
-```
-
-## Headers every `/mcp` request needs
-
-| Header               | Value                                |
-| -------------------- | ------------------------------------ |
-| `Authorization`      | `Bearer <MCP_API_KEY>`               |
-| `X-Concrete-User-Id` | Your Concrete CMS user ID (e.g. `1`) |
-
-### Optional: user-bound API key
-
-If you prefer not to send `X-Concrete-User-Id`, configure a personal key on the MCP server:
-
-```bash
-MCP_API_KEYS={"chatgpt-personal":1}
-```
-
-Restart the MCP service. Clients then only need:
-
-```
-Authorization: Bearer chatgpt-personal
-```
-
-A numeric value binds the key to that CMS user. Prefer a dedicated personal key for desktop clients rather than sharing a dashboard backend key. See the **[Security Guide](security.md)**.
-
-## ChatGPT desktop (Streamable HTTP)
-
-Verified against ChatGPT desktop custom MCP connectors (Plugins → MCPs).
-
-1. Open **Settings → Plugins → MCPs** (or the equivalent Integrations / Developer Mode path in your build).
-2. Choose **Connect to a custom MCP**.
-3. Fill in:
-
-| Field | Value                           |
-| ----- | ------------------------------- |
-| Name  | Concrete CMS (or any label)     |
-| Type  | **Streamable HTTP** (not STDIO) |
-| URL   | `https://mcp.example.com/mcp`   |
-
-4. Authentication and headers:
-
-   - Prefer **Bearer token env var** (for example `MCP_BEARER_TOKEN`) and put the API key in that environment variable — do not paste long-lived secrets into screenshots or shared configs.
-   - Add header `X-Concrete-User-Id` with your CMS user ID.
-   - **Do not** set both a Bearer-token env var **and** a manual `Authorization` header. That duplicates auth and can break the connector.
-
-5. Save, enable the connector in a chat, and ask something that needs Concrete CMS (for example system info or list pages).
-
-## Claude Desktop via `mcp-remote`
-
-Claude Desktop’s `mcpServers` config spawns local processes; it does not open remote HTTP MCP URLs directly. Use the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge:
+Open the JSON configuration file (see [how to find it](local-setup.md#find-the-json-configuration-file-of-your-ai-agent)) and add this entry:
 
 ```json
 {
@@ -131,48 +39,59 @@ Claude Desktop’s `mcpServers` config spawns local processes; it does not open 
         "X-Concrete-User-Id: 1"
       ],
       "env": {
-        "MCP_API_KEY": "your-mcp-api-key"
+        "MCP_API_KEY": "your-key"
       }
     }
   }
 }
 ```
 
-Replace the URL, user ID, and API key. Restart Claude Desktop after editing the config.
+Replace the address, the key (`your-key`) and the user ID (`1`).
+If you received a personal key, remove the two lines of the `X-Concrete-User-Id` header.
 
-This is separate from **local stdio** mode in the [main README](../README.md), where Claude spawns `node dist/index.js` on your machine and stores tokens under `~/.concretecms-mcp/`.
+Restart Claude Desktop after saving the file.
 
-## Other Streamable HTTP clients
+## ChatGPT
 
-Any client that supports remote Streamable HTTP MCP can use the same endpoint and headers:
+These steps are for the desktop application of ChatGPT.
 
-- URL: `https://mcp.example.com/mcp`
-- `Authorization: Bearer <MCP_API_KEY>`
-- `X-Concrete-User-Id: <cms_user_id>` (unless using a user-bound key)
+1. Open **Settings → Plugins → MCPs** (the name of this page may be different in your version).
+2. Choose **Connect to a custom MCP**.
+3. Fill in the fields:
 
-Authorize the CMS user on the server first, as above.
+   | Field | Value                           |
+   | ----- | ------------------------------- |
+   | Name  | Concrete CMS (or any other)     |
+   | Type  | **Streamable HTTP** (not STDIO) |
+   | URL   | `https://mcp.example.com/mcp`   |
+
+4. Set the key as **Bearer token env var** (for example `MCP_BEARER_TOKEN`), and save the key in that environment variable.
+   Do not add an `Authorization` header by hand too: with both, the connection may fail.
+5. Add the header `X-Concrete-User-Id` with your user ID (you can skip this if you received a personal key).
+6. Save, enable the connector in a chat, and ask something about your Concrete CMS site (for example its system information, or the list of its pages).
+
+## Other AI agents
+
+Any AI agent that supports remote MCP servers with the Streamable HTTP transport can use the connector.
+Configure it with:
+
+- the address of the connector, for example `https://mcp.example.com/mcp`
+- the header `Authorization: Bearer <key>`
+- the header `X-Concrete-User-Id: <your user ID>` (not needed with a personal key)
 
 ## Troubleshooting
 
-| Symptom                           | Likely cause                                           | Fix                                                                                       |
-| --------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
-| Connector cannot connect          | Wrong URL, TLS, or proxy                               | `curl https://mcp.example.com/health`; URL must include `/mcp` (and `PATH_PREFIX` if set) |
-| `401 Unauthorized`                | Missing or wrong API key                               | Check Bearer token / `Authorization` header                                               |
-| `400` missing user context        | No `X-Concrete-User-Id` and key is not user-bound      | Add the header or use `MCP_API_KEYS` with a numeric user ID                               |
-| Tools fail / not authenticated    | CMS OAuth not completed for that user                  | Run `/oauth/start`, confirm `/oauth/status`                                               |
-| Duplicate / flaky auth in ChatGPT | Bearer env var **and** `Authorization` header both set | Use one auth method only                                                                  |
-| Path 404                          | `PATH_PREFIX` mismatch                                 | Use `https://cms.example.com/ccm-mcp/mcp` when `PATH_PREFIX=/ccm-mcp`                     |
+| Problem                                        | Likely cause                                       | What to do                                                                                              |
+| ---------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| The AI agent cannot connect                    | Wrong address, or connector not reachable          | Check the address (it usually ends with `/mcp`), and that the connector is reachable from your computer |
+| `401 Unauthorized`                             | Missing or wrong key                               | Check the key                                                                                           |
+| `400`, missing user context                    | Missing user ID, and the key is not a personal one | Add the `X-Concrete-User-Id` header, or ask for a personal key                                          |
+| It connects, but the requests fail             | You are not authorized yet                         | Ask to be authorized: see [Authorize the users](remote-server.md#authorize-the-users)                   |
+| ChatGPT connects only sometimes, or not at all | The key is set in two places                       | Use either the Bearer token env var or the `Authorization` header, not both                             |
+| `404` error                                    | The address lacks a part of the path               | Ask for the complete address: it may contain a prefix, like `https://cms.example.com/ccm-mcp/mcp`       |
 
 ## Security recommendations
 
-- Prefer a **personal** `MCP_API_KEYS` entry for desktop clients
-- Store secrets in env vars, not in committed config or screenshots
-- Revoke with `/oauth/revoke` when finished on a shared machine
-- Keep MCP and CMS behind HTTPS
-
-## Related docs
-
-- [Remote MCP Server Guide](remote-server.md) — deploy HTTP mode
-- [Security Guide](security.md) — tokens, API keys, trust model
-- [MCP Client Developer Guide](mcp-client-guide.md) — build a custom HTTP client
-- [Main README](../README.md) — local stdio (Claude Desktop spawning the process)
+- Ask for a personal key, instead of sharing the same key with other people.
+- Do not write the key in files or screenshots that you share.
+- When you stop using the connector from a shared computer, ask to revoke your authorization.

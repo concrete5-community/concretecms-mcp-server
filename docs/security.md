@@ -1,6 +1,6 @@
 # Security
 
-This document describes how the Concrete CMS MCP server stores credentials and how to use it safely in local and remote deployments.
+This page explains how the connector stores the tokens and the keys, and how to use it safely, both on your computer and on a server.
 
 ## What is stored
 
