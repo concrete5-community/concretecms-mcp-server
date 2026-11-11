@@ -2,7 +2,14 @@
 
 # Concrete CMS MCP Server
 
-A [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server for [Concrete CMS](https://www.concretecms.org) built with TypeScript.
+Use an AI agent, like Claude Desktop, to work with your [Concrete CMS](https://www.concretecms.org) site: ask it about your pages, files and users, or let it update your content.
+
+AI agents cannot work with a Concrete CMS site by themselves: they need a connector.
+This project is that connector: it tells the AI agent what it can do in your site, and it does it on behalf of the agent, using the REST API of Concrete CMS.
+
+You decide what the connector is allowed to do, and it always acts with the permissions of the Concrete CMS user who signed in.
+
+In technical terms, the connector is a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server, built with TypeScript.
 
 ![Screenshot of a chat with Claude Desktop and a Concrete CMS MCP Server](docs/screenshot.png)
 
