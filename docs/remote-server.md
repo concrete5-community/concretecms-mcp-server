@@ -1,387 +1,111 @@
-# Remote MCP Server Guide
+# Remote server
 
-Use remote mode when a remote MCP client needs to connect over HTTP instead of spawning a local stdio process. This is useful for hosted AI agents, CMS dashboards, and custom MCP clients.
+The connector runs on a web server, and the AI agents reach it over the network.
 
-You can also run HTTP mode on your local machine to test an AI agent before deploying — see **[Test HTTP mode locally](#test-http-mode-locally)**.
+Choose this setup when:
 
-The server exposes a [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) MCP endpoint and persistent OAuth routes.
+- several people must use the same connector: you configure it once, on the server
+- the AI agent does not run on your computer (for example an online AI service, a web application, or a Concrete CMS package), so it cannot start a program on it
+- you want the credentials of Concrete CMS to stay on the server, instead of on the computer of every user
+- you want to connect to more than one Concrete CMS site (see [Several Concrete CMS sites](#several-concrete-cms-sites))
 
-For local stdio mode (Claude Desktop spawning the process), see the [main README](../README.md).
+If you are the only user, and your AI agent runs on your computer, the [Local configuration](local-setup.md) may be simpler.
 
-For building MCP clients and AI agents that call this server, see the **[MCP Client Developer Guide](mcp-client-guide.md)**.
+## How it works
 
-## Client integration
+- The connector runs on a web server, and has its own address (for example `https://mcp.example.com`).
+- The address must be reachable by the AI agents and by the browsers of the people using them: it can be on the internet, or only inside your local network.
+- The AI agents connect to that address, using a key that you choose.
+- Every person signs in to Concrete CMS once, to authorize the connector to act on their behalf.
 
-Remote clients authenticate with `Authorization: Bearer <MCP_API_KEY>` and identify the CMS user with `X-Concrete-User-Id` on every `/mcp` request.
+## What you need
 
-| Integration       | Description                                                  |
-| ----------------- | ------------------------------------------------------------ |
-| **Backend agent** | Your service calls `/mcp` and OAuth admin routes             |
-| **Web app proxy** | Your API forwards to `/mcp`; API key stays server-side       |
-| **CMS package**   | Dashboard controller proxies to `/mcp` using session user ID |
+- A web server where you can install and run programs, with [Git](https://git-scm.com/install) and [Node.js](https://nodejs.org/en/download) 22 or later (the examples in this page are for Linux).
+- An address for the connector. It should use HTTPS, because the key and the data of your site travel over it.
+- An administrator account in your Concrete CMS site, to set up its API.
 
-See the **[MCP Client Developer Guide](mcp-client-guide.md)** for HTTP API details, OAuth flow, and implementation patterns.
+If you only want to try the connector before installing it on a server, see [Try the remote connector on your computer](remote-server-local-test.md).
 
-For local stdio (Claude Desktop spawning the process), see the [main README](../README.md).
+## Installation
 
-For ChatGPT, Claude Desktop via `mcp-remote`, or other local clients connecting to this remote server, see **[Connect Local MCP Clients to a Remote Server](local-clients.md)**.
+### 1. Choose the address
 
-See the [Security Guide](security.md) for the full trust model.
+The connector needs its own address.
+You have two options:
 
-## Environment variables
+- a dedicated subdomain: it is the simplest option
+- the same domain as your Concrete CMS site, with a path prefix that keeps the two apart
 
-| Variable               | Required         | Default                        | Description                                                      |
-| ---------------------- | ---------------- | ------------------------------ | ---------------------------------------------------------------- |
-| `TRANSPORT_TYPE`       | No               | `stdio`                        | Set to `http` for remote mode                                    |
-| `PUBLIC_BASE_URL`      | Yes (http mode)  | —                              | Public URL of this server, e.g. `https://mcp.example.com`        |
-| `TOKEN_ENCRYPTION_KEY` | Yes (http mode)  | —                              | AES-256-GCM encryption key for token files                       |
-| `MCP_API_KEY`          | Yes (http mode)* | —                              | Bearer token for MCP clients                                     |
-| `MCP_API_KEYS`         | Alternative      | —                              | JSON map of API keys to CMS user IDs (`null` = dynamic)          |
-| `PATH_PREFIX`          | No               | _(empty)_                      | Path prefix for all routes, e.g. `/ccm-mcp`                      |
-| `HTTP_HOST`            | No               | `0.0.0.0`                      | Bind address                                                     |
-| `HTTP_PORT`            | No               | `3000`                         | Listen port                                                      |
-| `TOKEN_DIR`            | No               | `~/.concretecms-mcp/tokens`    | Base token directory; per-site subdirs are created automatically |
-| `MCP_ENDPOINT_PATH`    | No               | `{PATH_PREFIX}/mcp`            | Streamable HTTP MCP endpoint                                     |
-| `OAUTH_START_PATH`     | No               | `{PATH_PREFIX}/oauth/start`    | OAuth initiation path                                            |
-| `OAUTH_CALLBACK_PATH`  | No               | `{PATH_PREFIX}/oauth/callback` | OAuth redirect path                                              |
-| `OAUTH_STATUS_PATH`    | No               | `{PATH_PREFIX}/oauth/status`   | OAuth status path                                                |
-| `OAUTH_REVOKE_PATH`    | No               | `{PATH_PREFIX}/oauth/revoke`   | Per-user token revocation                                        |
-| `HEALTH_PATH`          | No               | `{PATH_PREFIX}/health`         | Health check path                                                |
+|                               | Dedicated subdomain                      | Same domain, with a prefix                       |
+| ----------------------------- | ---------------------------------------- | ------------------------------------------------ |
+| `PUBLIC_BASE_URL`             | `https://mcp.example.com`                | `https://www.example.com`                        |
+| `PATH_PREFIX`                 | Empty or not set                         | `/ccm-mcp`                                       |
+| Address for the AI agents     | `https://mcp.example.com/mcp`            | `https://www.example.com/ccm-mcp/mcp`            |
+| Redirect URI for Concrete CMS | `https://mcp.example.com/oauth/callback` | `https://www.example.com/ccm-mcp/oauth/callback` |
 
-\* Either `MCP_API_KEY` or `MCP_API_KEYS` is required in http mode.
+`PUBLIC_BASE_URL` and `PATH_PREFIX` are two of the settings of the connector: you will set them in step 4.
+(You can fully customize the paths above: see the [Paths](configuration.md#paths) section of the Configuration reference.)
 
-All `CONCRETE_*` variables from the [main README](../README.md) are still required. `CONCRETE_API_SCOPE` must include `account:read` so the server can resolve CMS user IDs after OAuth.
+### 2. Set up the Concrete CMS API
 
-### Generate secrets
+[Set up the Concrete CMS API](concrete-api.md) in your site, using the Redirect URI of the address you chose in step 1.
 
-```bash
-# Encryption key (TOKEN_ENCRYPTION_KEY)
-node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+The scopes you choose must include `account:read`: the connector needs it to know which Concrete CMS user has signed in.
 
-# MCP client API key (MCP_API_KEY)
-node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
-```
+### 3. Install the connector
 
-Store secrets in systemd `Environment=` directives or a root-only `0400` env file — not in a world-readable `.env` on production servers.
-
-## Test HTTP mode locally
-
-Before deploying to a remote server, you can run the same HTTP transport on your development machine to verify that your AI agent or MCP client connects correctly. No reverse proxy is required — the server listens directly on `127.0.0.1:3000` (or whatever you set in `HTTP_HOST` / `HTTP_PORT`).
-
-### 1. Build the server
+Check that Git and Node.js are installed on the server:
 
 ```bash
-npm ci && npm run build
+git --version
+node --version
+npm --version
 ```
 
-### 2. Register a local OAuth redirect URI
-
-In your Concrete CMS API integration, add this redirect URI (it must match `${PUBLIC_BASE_URL}${OAUTH_CALLBACK_PATH}` exactly):
-
-```
-http://127.0.0.1:3000/oauth/callback
-```
-
-If you use a different `PUBLIC_BASE_URL`, `HTTP_PORT`, or `PATH_PREFIX`, adjust the URI accordingly. For example, with `PATH_PREFIX=/ccm-mcp` the callback is `http://127.0.0.1:3000/ccm-mcp/oauth/callback`.
-
-### 3. Start the server
-
-HTTP mode requires **four extra variables** beyond the `CONCRETE_*` settings from the [main README](../README.md): `TRANSPORT_TYPE=http`, `PUBLIC_BASE_URL`, `TOKEN_ENCRYPTION_KEY`, and `MCP_API_KEY`.
-
-**Option A — single line (recommended for quick tests):**
+The connector should run as a dedicated user, with no other permissions on the server.
+Create it (the examples in this page call it `mcp`):
 
 ```bash
-TRANSPORT_TYPE=http \
-PUBLIC_BASE_URL=http://127.0.0.1:3000 \
-TOKEN_ENCRYPTION_KEY="$(node -e "console.log(require('crypto').randomBytes(32).toString('base64'))")" \
-MCP_API_KEY="$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))")" \
-CONCRETE_CANONICAL_URL=https://cms.example.com \
-CONCRETE_API_CLIENT_ID=YOUR_API_CLIENT_ID \
-CONCRETE_API_CLIENT_SECRET=YOUR_API_CLIENT_SECRET \
-CONCRETE_API_SCOPE="account:read system:info:read" \
-npm run start
+sudo useradd --system --user-group --create-home --home-dir /var/lib/concretecms-mcp --shell /usr/sbin/nologin mcp
 ```
 
-**Option B — `.env` file (recommended for repeated local testing):**
-
-```bash
-cp .env.example .env
-```
-
-Edit `.env` for local HTTP mode:
-
-```bash
-TRANSPORT_TYPE=http
-PUBLIC_BASE_URL=http://127.0.0.1:3000
-HTTP_HOST=127.0.0.1
-HTTP_PORT=3000
-CONCRETE_CANONICAL_URL=https://cms.example.com
-CONCRETE_API_CLIENT_ID=YOUR_API_CLIENT_ID
-CONCRETE_API_CLIENT_SECRET=YOUR_API_CLIENT_SECRET
-CONCRETE_API_SCOPE=account:read system:info:read
-TOKEN_ENCRYPTION_KEY=your-base64-key
-MCP_API_KEY=your-mcp-api-key
-```
-
-Load and start:
-
-```bash
-set -a && source .env && set +a && npm run start
-```
-
-> **Note:** The server does not load `.env` automatically. You must export the variables (as above) or pass them inline when starting.
-
-### 4. Confirm HTTP mode started
-
-Check the terminal output. A successful local HTTP start looks like:
-
-```
-[concretecms-mcp] Starting MCP server (http transport)...
-[concretecms-mcp] Remote MCP server running at http://127.0.0.1:3000/mcp
-[concretecms-mcp] OAuth start URL: http://127.0.0.1:3000/oauth/start
-[concretecms-mcp] Remote MCP server ready. Authorize users via /oauth/start
-```
-
-If you see `(stdio transport)` instead, the server is **not** listening on HTTP and `http://127.0.0.1:3000/health` will not work. The most common cause is `TRANSPORT_TYPE=http` not being set — often due to a broken multiline shell command (see troubleshooting below).
-
-### 5. Smoke-test endpoints
-
-**Health check** (no authentication required):
-
-```bash
-curl http://127.0.0.1:3000/health
-```
-
-Expected response:
-
-```json
-{ "status": "healthy" }
-```
-
-**OAuth status** (requires API key):
-
-```bash
-curl -H "Authorization: Bearer $MCP_API_KEY" \
-  "http://127.0.0.1:3000/oauth/status?user_id=42"
-```
-
-**Start OAuth for a user** (simulates a backend proxy — expect `state=` in `Location`):
-
-```bash
-curl -s -D - -o /dev/null -H "Authorization: Bearer $MCP_API_KEY" \
-  "http://127.0.0.1:3000/oauth/start?user_id=42"
-```
-
-You can also run `npm run verify:oauth` to confirm the shipped `dist/` uses state-based session binding.
-
-**OAuth debug mode** (recommended while troubleshooting callback failures):
-
-```bash
-OAUTH_DEBUG=1 npm run start
-```
-
-When enabled, the browser callback page shows a `Reason:` code and details. The MCP server always logs the same reason to stderr, for example:
-
-| Reason                       | Meaning                                                                                                           |
-| ---------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `no_pending_sessions`        | MCP has no in-memory OAuth session (server restarted, flow expired, or `/oauth/start` never reached this process) |
-| `pkce_match_failed`          | Callback arrived, but token exchange failed for every pending session — see per-session errors in logs            |
-| `user_id_mismatch`           | Token exchange succeeded, but the CMS account that approved OAuth is not the `user_id` from `/oauth/start`        |
-| `resolve_cms_user_failed`    | Token exchange succeeded, but `/ccm/api/1.0/account` could not be read with the new access token                  |
-| `oauth_provider_error`       | CMS redirected with `error=` instead of `code=`                                                                   |
-| `missing_authorization_code` | Callback reached MCP without a `code` query parameter                                                             |
-
-### 6. Connect your AI agent
-
-Point your agent or MCP client at the local server:
-
-```
-MCP_SERVER_URL=http://127.0.0.1:3000
-```
-
-Send these headers on every `/mcp` request (see the **[MCP Client Developer Guide](mcp-client-guide.md)** for the full protocol):
-
-```
-Authorization: Bearer <MCP_API_KEY>
-X-Concrete-User-Id: <cms_user_id>
-```
-
-Authorize the CMS user via `/oauth/start` before calling tools. Poll `/oauth/status?user_id=<id>` to confirm authentication.
-
-### Troubleshooting local HTTP mode
-
-| Symptom                                                       | Likely cause                                                                   | Fix                                                                                                                |
-| ------------------------------------------------------------- | ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `http://127.0.0.1:3000/health` connection refused             | Server running in stdio mode (default)                                         | Set `TRANSPORT_TYPE=http` and restart                                                                              |
-| Terminal shows `(stdio transport)`                            | `TRANSPORT_TYPE` not exported                                                  | Use the single-line command or `set -a && source .env`                                                             |
-| `Missing required environment variable: TOKEN_ENCRYPTION_KEY` | HTTP secrets not set                                                           | Set `TOKEN_ENCRYPTION_KEY` and `MCP_API_KEY`                                                                       |
-| `zsh: command not found: I` (or similar)                      | Extra text on an env-var line                                                  | Each line must be only `VAR=value` — no trailing words                                                             |
-| `TRANSPORT_TYPE` set but still stdio                          | `VAR=value other-command` syntax                                               | `TOKEN_ENCRYPTION_KEY=xxx npm run start` sets the var only for that command; use `export` or `source .env` instead |
-| Broken multiline command                                      | Missing `\` at end of a line                                                   | Every continued line except the last must end with `\`                                                             |
-| OAuth redirect mismatch                                       | `PUBLIC_BASE_URL` differs from registered URI                                  | Register `http://127.0.0.1:3000/oauth/callback` in CMS and match `PUBLIC_BASE_URL`                                 |
-| Port already in use                                           | Another process on port 3000                                                   | Change `HTTP_PORT` and update `PUBLIC_BASE_URL` accordingly                                                        |
-| OAuth callback **400** — Authorization could not be completed | See MCP server logs for `OAuth callback failed: <reason>`                      | Restart with `OAUTH_DEBUG=1` to show the reason in the browser                                                     |
-| Authorize URL missing `state`                                 | Running outdated `dist/`                                                       | `npm run build && npm run verify:oauth`, then restart                                                              |
-| Callback 400 with `state` present                             | Client modified MCP `Location` URL, multiple MCP processes, or expired session | Forward `Location` unchanged; `lsof -nP -iTCP:3000 -sTCP:LISTEN`; complete flow within 10 minutes                  |
-| `/oauth/start` 409                                            | Concurrent OAuth for same user                                                 | Wait or call `/oauth/revoke`                                                                                       |
-
-## Concrete CMS OAuth setup
-
-Register this redirect URI in your Concrete CMS API integration:
-
-```
-https://mcp.example.com/oauth/callback
-```
-
-Use the same value as `${PUBLIC_BASE_URL}${OAUTH_CALLBACK_PATH}`.
-
-## Per-user authorization (http mode)
-
-Each CMS user must authorize separately. API calls use the token for the user specified by `X-Concrete-User-Id`.
-
-### Authorize a user
-
-```bash
-# Obtain redirect URL (open Location in browser) — use GET, not HEAD
-curl -s -D - -o /dev/null -H "Authorization: Bearer $MCP_API_KEY" \
-  "https://mcp.example.com/oauth/start?user_id=42"
-```
-
-Sign in to CMS as that user and approve scopes. Tokens are saved on the server as `{userId}.tokens.json` and `{userId}.client.json` under `TOKEN_DIR/<siteKey>/` (derived from `CONCRETE_CANONICAL_URL`).
-
-If another OAuth flow is already running for that user, `/oauth/start` returns `409`.
-
-### Proxied OAuth (backend clients)
-
-Most HTTP clients — including Concrete CMS packages, web app backends, and agent services — should **not** send the browser directly to MCP `/oauth/start`. The API key stays server-side; the backend proxies the start request.
-
-```mermaid
-sequenceDiagram
-    participant Browser
-    participant Backend as BackendProxy
-    participant MCP as MCP_Server
-    participant CMS as ConcreteCMS
-
-    Browser->>Backend: GET oauth/start
-    Backend->>MCP: GET /oauth/start (Bearer API key)
-    MCP-->>Backend: 302 Location=CMS_authorize_URL
-    Backend-->>Browser: 302 same Location
-    Browser->>CMS: approve OAuth
-    CMS-->>Browser: 302 MCP_callback?code&state
-    Browser->>MCP: GET /oauth/callback
-    MCP-->>Browser: 200 Authorization Successful
-```
-
-1. **Backend** calls `GET /oauth/start?user_id=N` with `Authorization: Bearer <MCP_API_KEY>`.
-2. MCP returns **`302`** with `Location:` pointing to the CMS authorize URL. The URL includes **`state=`**, **`code_challenge=`**, `client_id`, and `redirect_uri`.
-3. Backend redirects the **browser** to that `Location` URL **unchanged** (do not rebuild or strip query parameters).
-4. User approves on Concrete CMS. CMS redirects to `{PUBLIC_BASE_URL}/oauth/callback?code=...&state=...`.
-5. Browser hits the MCP callback. MCP resolves the pending PKCE session (by callback `state` when echoed, otherwise by trying each pending session until PKCE verification succeeds — Concrete CMS currently **replaces** `state` on callback rather than echoing the value from step 2) and exchanges the code.
-
-The browser does **not** need an MCP-host cookie. Session binding uses PKCE plus an in-memory pending session, not `Set-Cookie`.
-
-> **Concrete CMS `state` behavior:** The authorize URL from `/oauth/start` includes MCP-generated `state`, but Concrete CMS may issue a **different** `state` on callback. The MCP server handles this by matching the authorization code to the correct pending session through PKCE verification. Concurrent OAuth flows remain safe because only the session whose `code_verifier` matches the issued code can complete token exchange.
-
-> **Important:** `npm run start` runs `dist/index.js`. After editing `src/`, run `npm run build` (or rely on the `prestart` hook) so `dist/` matches `src/`. A stale `dist/` build that omits `state` from authorize URLs will cause callback **400 Invalid or expired OAuth session** for proxied clients.
-
-See the **[MCP Client Developer Guide](mcp-client-guide.md)** for web application and CMS package patterns.
-
-### Check status
-
-```bash
-curl -H "Authorization: Bearer $MCP_API_KEY" \
-  "https://mcp.example.com/oauth/status?user_id=42"
-```
-
-```json
-{ "userId": 42, "authenticated": true, "expiresAt": 1710000000000 }
-```
-
-### Revoke a user
-
-```bash
-curl -X POST -H "Authorization: Bearer $MCP_API_KEY" \
-  "https://mcp.example.com/oauth/revoke?user_id=42"
-```
-
-## Hosting options
-
-### Dedicated subdomain (default)
-
-Run the MCP server on its own hostname, for example `mcp.example.com`, pointing at your Concrete CMS site `cms.example.com`. Leave `PATH_PREFIX` unset.
-
-- MCP endpoint: `https://mcp.example.com/mcp`
-- OAuth start: `https://mcp.example.com/oauth/start`
-- OAuth callback: `https://mcp.example.com/oauth/callback`
-
-### Same domain with a path prefix
-
-You can also run the MCP server on the same domain as Concrete CMS by setting a path prefix. This avoids conflicts with CMS routes such as `/oauth/2.0/authorize`.
-
-```bash
-TRANSPORT_TYPE=http
-PUBLIC_BASE_URL=https://cms.example.com
-PATH_PREFIX=/ccm-mcp
-CONCRETE_CANONICAL_URL=https://cms.example.com
-```
-
-With `PATH_PREFIX=/ccm-mcp`, the routes become:
-
-- MCP endpoint: `https://cms.example.com/ccm-mcp/mcp`
-- OAuth start: `https://cms.example.com/ccm-mcp/oauth/start`
-- OAuth callback: `https://cms.example.com/ccm-mcp/oauth/callback`
-
-Register the callback URL in your Concrete CMS API integration:
-
-```
-https://cms.example.com/ccm-mcp/oauth/callback
-```
-
-Individual path env vars (`MCP_ENDPOINT_PATH`, `OAUTH_START_PATH`, etc.) can override the defaults if needed.
-
-When sharing a domain with Concrete CMS, do not proxy the entire `/oauth/` prefix to the MCP server, because CMS uses `/oauth/2.0/*` for its own OAuth endpoints.
-
-## Deploy on Linux with systemd
-
-For production, running the MCP server as a **systemd service** is a simple and reliable approach. The server listens on port 3000 locally; place a reverse proxy in front for public access.
-
-### 1. Install Node.js 20+
-
-Install Node.js 20 or later using your platform's recommended method. See the [Node.js download page](https://nodejs.org/en/download) for official packages and instructions.
-
-Verify the installation:
-
-```bash
-node -v
-npm -v
-```
-
-### 2. Clone and build
-
-Choose an installation directory on your server, for example `/opt/concretecms-mcp`:
+Then download and build the connector, in a directory of your choice (for example `/opt/concretecms-mcp`):
 
 ```bash
 sudo mkdir -p /opt/concretecms-mcp
 sudo chown mcp:mcp /opt/concretecms-mcp
 cd /opt/concretecms-mcp
-git clone https://github.com/concrete5-community/concretecms-mcp-server.git .
-npm ci && npm run build
+sudo -u mcp git clone https://github.com/concrete5-community/concretecms-mcp-server.git .
+sudo -u mcp npm ci
+sudo -u mcp npm run build
 ```
 
-### 3. Configure environment
+### 4. Configure the connector
 
-Create a secrets file readable only by the service user:
+Generate two secrets:
 
 ```bash
-sudo install -o mcp -g mcp -m 0400 /dev/null /etc/concretecms-mcp.env
-sudo vi /etc/concretecms-mcp.env
+# The key used to encrypt the saved tokens (TOKEN_ENCRYPTION_KEY)
+node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
+
+# The key the AI agents must use to connect (MCP_API_KEY)
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-Example:
+Create the file with the settings, accessible only by the user that runs the connector, then edit it (the examples use `nano`, but you can use your preferred editor):
+
+```bash
+sudo touch /etc/concretecms-mcp.env
+sudo chown mcp:mcp /etc/concretecms-mcp.env
+sudo chmod 0600 /etc/concretecms-mcp.env
+sudo nano /etc/concretecms-mcp.env
+```
+
+For example:
 
 ```bash
 PUBLIC_BASE_URL=https://mcp.example.com
-CONCRETE_CANONICAL_URL=https://cms.example.com
+CONCRETE_CANONICAL_URL=https://www.example.com
 CONCRETE_API_CLIENT_ID=YOUR_API_CLIENT_ID
 CONCRETE_API_CLIENT_SECRET=YOUR_API_CLIENT_SECRET
 CONCRETE_API_SCOPE=account:read system:info:read
@@ -391,16 +115,32 @@ MCP_API_KEY=your-mcp-api-key
 TOKEN_DIR=/var/lib/concretecms-mcp/tokens
 ```
 
+Create the directory where the tokens are saved:
+
 ```bash
 sudo mkdir -p /var/lib/concretecms-mcp/tokens
 sudo chown mcp:mcp /var/lib/concretecms-mcp/tokens
 sudo chmod 700 /var/lib/concretecms-mcp/tokens
 ```
 
-### 4. Create a systemd service
+The settings a remote connector always needs are:
+
+- the four `CONCRETE_*` settings of your Concrete CMS site
+- `TRANSPORT_TYPE=http` (in these examples it is set in the service, see step 5)
+- `PUBLIC_BASE_URL`: the address of the connector
+- `TOKEN_ENCRYPTION_KEY`: the key used to encrypt the saved tokens
+- `MCP_API_KEY` (or `MCP_API_KEYS`): the key the AI agents must use to connect
+
+See the [Configuration reference](configuration.md) for all the settings and their defaults.
+
+### 5. Run the connector as a service
+
+Running the connector as a systemd service keeps it always on, and restarts it when needed.
+
+Create the service:
 
 ```bash
-sudo vi /etc/systemd/system/concretecms-mcp.service
+sudo nano /etc/systemd/system/concretecms-mcp.service
 ```
 
 ```ini
@@ -426,9 +166,10 @@ NoNewPrivileges=true
 WantedBy=multi-user.target
 ```
 
-Replace paths and `ExecStart` with values that match your server. Confirm the Node.js path with `which node`.
+Replace the paths with the ones of your server.
+You can find the path of Node.js with `which node`.
 
-Enable and start:
+Enable and start the service:
 
 ```bash
 sudo systemctl daemon-reload
@@ -437,32 +178,44 @@ sudo systemctl start concretecms-mcp
 sudo systemctl status concretecms-mcp
 ```
 
-Useful commands:
+Other useful commands:
 
 ```bash
+# Restart the connector (for example after changing its settings)
 sudo systemctl restart concretecms-mcp
+
+# Follow the log of the connector
 sudo journalctl -u concretecms-mcp -f
+
+# Clear the "failed" state of the service, after fixing a problem
 sudo systemctl reset-failed concretecms-mcp
 ```
 
-After deploying code changes:
+To update the connector to a newer version:
 
 ```bash
 cd /opt/concretecms-mcp
-git pull
-npm run build
+sudo -u mcp git pull
+sudo -u mcp npm ci
+sudo -u mcp npm run build
 sudo systemctl restart concretecms-mcp
 ```
 
-### 5. Reverse proxy
+### 6. Make the connector reachable
 
-Expose the service through your reverse proxy. The examples below use nginx, but the same routes can be configured on Apache, Caddy, or another proxy.
+The connector listens on port 3000 of the server.
+To make it reachable at the address you chose in step 1, configure the web server to forward the requests to it (that is, as a reverse proxy).
 
-Consider `limit_req` on OAuth routes as defense-in-depth:
+The examples below are for nginx, but you can do the same with Apache, Caddy, or other web servers.
+
+As an additional protection, you can limit how often the sign-in addresses can be called.
+Add this line to the `http` section of the nginx configuration: it defines a limit of 10 requests per minute for every IP address.
 
 ```nginx
 limit_req_zone $binary_remote_addr zone=mcp_oauth:10m rate=10r/m;
 ```
+
+The `limit_req` lines in the first example below apply it (remove them if you do not add this line).
 
 #### Dedicated subdomain
 
@@ -505,7 +258,7 @@ location = /health {
 }
 ```
 
-#### Same domain with `PATH_PREFIX=/ccm-mcp`
+#### Same domain, with `PATH_PREFIX=/ccm-mcp`
 
 ```nginx
 location /ccm-mcp/mcp {
@@ -524,35 +277,173 @@ location /ccm-mcp/health {
 }
 ```
 
-Reload your proxy after changing the configuration.
+Do not forward the whole `/oauth/` path to the connector: Concrete CMS uses `/oauth/2.0/*` for its own sign-in.
 
-## Connect a remote MCP client
+Reload the web server after changing its configuration.
 
-See the **[MCP Client Developer Guide](mcp-client-guide.md)** for the full HTTP API reference, per-user OAuth flow, agent loops, and implementation patterns (backend service, web app proxy, CMS package).
+### 7. Check that it works
 
-Quick reference — send on every `/mcp` request:
+```bash
+curl https://mcp.example.com/health
+```
+
+The answer must be:
+
+```json
+{ "status": "healthy" }
+```
+
+## Docker (alternative)
+
+If you prefer containers, you can use Docker instead of the steps 3, 4 and 5: you do not need Node.js, the dedicated user, or the service.
+You still need all the other steps.
+
+Download the source code of the connector, and create the file with the settings:
+
+```bash
+git clone https://github.com/concrete5-community/concretecms-mcp-server.git
+cd concretecms-mcp-server
+cp .env.example .env
+chmod 600 .env
+```
+
+Edit `.env`, setting at least:
+
+- the four `CONCRETE_*` settings of your Concrete CMS site
+- `PUBLIC_BASE_URL`: the address of the connector
+- `TOKEN_ENCRYPTION_KEY`: generate it with `openssl rand -base64 32`
+- `MCP_API_KEY`: generate it with `openssl rand -hex 32`
+
+Then start the connector:
+
+```bash
+docker compose up -d --build
+```
+
+Please note that:
+
+- `TRANSPORT_TYPE=http` is already set in `docker-compose.yml`.
+- The tokens are saved in the `mcp-tokens` Docker volume.
+- The connector is restarted automatically if it stops.
+- Only the settings listed in `docker-compose.yml` are passed to the connector: to use other ones, add them to that file.
+
+## Authorize the users
+
+Every person must authorize the connector once, by signing in to Concrete CMS.
+After that, the connector acts in Concrete CMS with the permissions of that person.
+
+In a local configuration the connector opens the browser for you.
+A remote connector cannot do that: someone who knows the key must start the sign-in with a command, and the person to authorize completes it in a browser.
+
+You need:
+
+- the ID of the Concrete CMS user (`42` in these examples)
+- the key for the AI agents, that is the `MCP_API_KEY` you generated in step 4 (`$MCP_API_KEY` in these examples)
+
+To authorize a user:
+
+```bash
+curl -s -D - -o /dev/null -H "Authorization: Bearer $MCP_API_KEY" \
+  "https://mcp.example.com/oauth/start?user_id=42"
+```
+
+The answer contains a `Location` line with an address.
+The person to authorize must open it in a browser within 10 minutes, sign in to Concrete CMS, and approve the scopes.
+If another sign-in is already in progress for that user, the answer is a `409` error.
+
+To check if a user is authorized:
+
+```bash
+curl -H "Authorization: Bearer $MCP_API_KEY" \
+  "https://mcp.example.com/oauth/status?user_id=42"
+```
+
+```json
+{ "userId": 42, "authenticated": true, "expiresAt": 1710000000000 }
+```
+
+To revoke the authorization of a user:
+
+```bash
+curl -X POST -H "Authorization: Bearer $MCP_API_KEY" \
+  "https://mcp.example.com/oauth/revoke?user_id=42"
+```
+
+The tokens are saved on the server, in a subdirectory of `TOKEN_DIR`.
+
+If you are building an application that authorizes the users for them, see [Proxied OAuth](proxied-oauth.md).
+
+## Personal keys (optional)
+
+With `MCP_API_KEY` all the people share the same key, and every AI agent must also say which Concrete CMS user it works for.
+
+As an alternative, you can give every person a different key, tied to the Concrete CMS user of that person.
+In the settings of the connector, replace `MCP_API_KEY` with `MCP_API_KEYS`, listing every key with the ID of its user:
+
+```bash
+MCP_API_KEYS='{"key-of-the-user-42":42,"key-of-the-user-57":57}'
+```
+
+Use a different, hard to guess key for every person (you can generate them like in step 4), and restart the connector after changing the settings.
+
+Please note that:
+
+- when `MCP_API_KEYS` is set, `MCP_API_KEY` is ignored
+- a key with `null` instead of a user ID is not tied to a person: it works like `MCP_API_KEY`
+- every person must still be authorized, as described above
+
+See the [Security Guide](security.md#client-authentication) for more details.
+
+## Connect the AI agents
+
+Every AI agent needs:
+
+- the address for the AI agents (see step 1), for example `https://mcp.example.com/mcp`
+- the key for the AI agents: the `MCP_API_KEY` you generated in step 4, or a personal key
+- the ID of the Concrete CMS user it works for (not needed with a personal key)
+
+How to configure them depends on the AI agent:
+
+- AI agents running on a computer (for example Claude Desktop or ChatGPT): see [Connect an AI agent on your computer to a remote connector](local-clients.md)
+- your own application or AI agent: see the [Developer guide](mcp-client-guide.md)
+
+For developers: the connector uses the [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) transport of MCP, and every request must include these headers:
 
 ```
 Authorization: Bearer <MCP_API_KEY>
 X-Concrete-User-Id: <cms_user_id>
 ```
 
-Poll `/oauth/status?user_id=<id>` before enabling AI for a user. Trigger `GET /oauth/start?user_id=<id>` when not authenticated.
+## Several Concrete CMS sites
 
-For ChatGPT, Claude Desktop via `mcp-remote`, or other local desktop clients, see **[Connect Local MCP Clients to a Remote Server](local-clients.md)**.
+One connector works with one Concrete CMS site.
+To connect to several sites, run one connector per site.
 
-## Docker deployment (alternative)
+The connectors can share the same server and the same copy of the code: what changes is the configuration.
+For every site you need:
 
-If you prefer containers over systemd:
+- its own API integration in Concrete CMS (see [Set up the Concrete CMS API](concrete-api.md))
+- its own file with the settings, with the `CONCRETE_*` settings of that site
+- its own `HTTP_PORT`, if the connectors run on the same server: it is the internal port the web server forwards the requests to, and it is not part of the address (change it in the service too, because the example in step 5 sets it there)
+- its own address: a dedicated subdomain, or a different `PATH_PREFIX` on the same domain
+- its own service, and its own rules in the configuration of the web server
 
-```bash
-cp .env.example .env
-# edit .env — set TOKEN_ENCRYPTION_KEY and MCP_API_KEY
-docker compose up -d --build
-```
+For example:
 
-`TRANSPORT_TYPE=http` is set in `docker-compose.yml`. Tokens are persisted in the `mcp-tokens` Docker volume.
+|                               | Site A                                     | Site B                                     |
+| ----------------------------- | ------------------------------------------ | ------------------------------------------ |
+| `CONCRETE_CANONICAL_URL`      | `https://site-a.example`                   | `https://site-b.example`                   |
+| `PUBLIC_BASE_URL`             | `https://mcp-a.example.com`                | `https://mcp-b.example.com`                |
+| `HTTP_PORT`                   | `3000`                                     | `3001`                                     |
+| The web server forwards to    | `http://127.0.0.1:3000`                    | `http://127.0.0.1:3001`                    |
+| File with the settings        | `/etc/concretecms-mcp-a.env`               | `/etc/concretecms-mcp-b.env`               |
+| Service                       | `concretecms-mcp-a`                        | `concretecms-mcp-b`                        |
+| Redirect URI for Concrete CMS | `https://mcp-a.example.com/oauth/callback` | `https://mcp-b.example.com/oauth/callback` |
+
+The connectors can use the same `TOKEN_DIR`: the tokens of every site are saved in a separate subdirectory.
+
+The AI agents connect to every connector separately: configure one connection per site.
 
 ## Security
 
-See the **[Security Guide](security.md)** for encryption, file permissions, trust model, and token revocation.
+See the [Security Guide](security.md) to know how the tokens are stored and encrypted, who is trusted, and how to revoke the access.
