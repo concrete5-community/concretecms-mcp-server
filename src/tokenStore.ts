@@ -118,6 +118,11 @@ function assertTokenDirSafe(tokenDir = getTokenDir()): void {
 
   ensureTokenDir(tokenDir)
 
+  // On Windows the mode bits do not describe the ACLs: every directory looks world-writable.
+  if (process.platform === 'win32') {
+    return
+  }
+
   const stat = statSync(tokenDir)
   const mode = stat.mode & 0o777
   if (mode & 0o002) {

@@ -160,6 +160,8 @@ Give the entries names that let you tell the sites apart.
 
 ## First use
 
+To verify the configuration, ask your AI agent to "check the connection to my Concrete CMS site": it tells what is wrong and how to fix it, without signing in (see [Connection check](../README.md#connection-check)).
+
 The first time you ask something that needs your site, a browser window opens: sign in to Concrete CMS and authorize the requested scopes.
 
 You do not have to sign in again: the tokens are saved under `~/.concretecms-mcp/tokens` (`%USERPROFILE%\.concretecms-mcp\tokens` on Windows), in a separate directory for every site.
