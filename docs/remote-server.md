@@ -231,6 +231,8 @@ proxy_set_header Host $host;
 proxy_set_header X-Forwarded-Proto $scheme;
 # The connector limits the sign-in requests by IP address: tell it the address of the client
 proxy_set_header X-Forwarded-For $remote_addr;
+# Ask the search engines not to list this subdomain
+add_header X-Robots-Tag "noindex, nofollow" always;
 
 location = /mcp {
     proxy_pass http://127.0.0.1:3000;
