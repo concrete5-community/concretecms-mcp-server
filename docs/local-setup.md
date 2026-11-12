@@ -29,8 +29,20 @@ Claude Desktop then asks for the settings:
 | API Integration Client Secret | The Client Secret of the API integration                                        |
 | API Integration Client Scopes | The [scopes](concrete-api.md#3-choose-the-scopes) you want, separated by spaces |
 
-You can leave the other fields empty.
-See the [Configuration reference](configuration.md) for their meaning.
+The other fields are optional: you can leave them as they are.
+
+| Field                   | Setting                        | When to change it                                                                          |
+| ----------------------- | ------------------------------ | ------------------------------------------------------------------------------------------ |
+| Sign-in Port            | `HTTP_PORT`                    | If the port 3000 is already in use on your computer: use the same port in the Redirect URI |
+| Token Encryption Key    | `TOKEN_ENCRYPTION_KEY`         | To encrypt the saved tokens                                                                |
+| Token File Name         | `CONCRETE_USER_ID`             | To change the name of the files where the tokens are saved                                 |
+| Token Directory         | `TOKEN_DIR`                    | To save the tokens in another directory                                                    |
+| Allow insecure HTTP     | `CONCRETE_ALLOW_INSECURE_HTTP` | If your Concrete CMS site is served over plain HTTP (development sites only)               |
+| OAuth debug mode        | `OAUTH_DEBUG`                  | To log more details about the sign-in                                                      |
+| Concrete API debug mode | `CONCRETE_API_DEBUG`           | To log the requests sent to Concrete CMS, and the responses                                |
+| Debug body limit        | `DEBUG_MAX_BODY`               | To change how much of every request and response is logged                                 |
+
+The _Setting_ column is the name used in the [Configuration reference](configuration.md), where you can find more details.
 
 ## Manual configuration
 
