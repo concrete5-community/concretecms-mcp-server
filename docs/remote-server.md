@@ -261,6 +261,11 @@ location = /oauth/revoke {
 location = /health {
     proxy_pass http://127.0.0.1:3000;
 }
+
+# Nothing else is served by this subdomain
+location / {
+    return 404;
+}
 ```
 
 The three `proxy_set_header` lines apply to all the `location` blocks, as long as none of them contains a `proxy_set_header` line of its own.
