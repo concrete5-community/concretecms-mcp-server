@@ -106,12 +106,14 @@ sudo nano /etc/concretecms-mcp.env
 For example:
 
 ```bash
+TRANSPORT_TYPE=http
+HTTP_HOST=127.0.0.1
+HTTP_PORT=3000
 PUBLIC_BASE_URL=https://mcp.example.com
 CONCRETE_CANONICAL_URL=https://www.example.com
 CONCRETE_API_CLIENT_ID=YOUR_API_CLIENT_ID
 CONCRETE_API_CLIENT_SECRET=YOUR_API_CLIENT_SECRET
 CONCRETE_API_SCOPE=account:read system:info:read
-HTTP_PORT=3000
 TOKEN_ENCRYPTION_KEY=your-base64-key
 MCP_API_KEY=your-mcp-api-key
 TOKEN_DIR=/var/lib/concretecms-mcp/tokens
@@ -128,10 +130,13 @@ sudo chmod 700 /var/lib/concretecms-mcp/tokens
 The settings a remote connector always needs are:
 
 - the four `CONCRETE_*` settings of your Concrete CMS site
-- `TRANSPORT_TYPE=http` (in these examples it is set in the service, see step 5)
+- `TRANSPORT_TYPE=http`
 - `PUBLIC_BASE_URL`: the address of the connector
 - `TOKEN_ENCRYPTION_KEY`: the key used to encrypt the saved tokens
 - `MCP_API_KEY` (or `MCP_API_KEYS`): the key the AI agents must use to connect
+
+`HTTP_HOST` and `HTTP_PORT` are the address and the port the connector listens on.
+With `127.0.0.1` it accepts connections only from the server itself, that is from the web server you configure in step 6: use another address only if the web server runs on a different machine.
 
 See the [Configuration reference](configuration.md) for all the settings and their defaults.
 
@@ -156,9 +161,6 @@ User=mcp
 Group=mcp
 WorkingDirectory=/opt/concretecms-mcp
 EnvironmentFile=/etc/concretecms-mcp.env
-Environment=TRANSPORT_TYPE=http
-Environment=HTTP_HOST=0.0.0.0
-Environment=HTTP_PORT=3000
 ExecStart=/usr/bin/node dist/index.js
 Restart=on-failure
 RestartSec=5
@@ -206,7 +208,7 @@ sudo systemctl restart concretecms-mcp
 
 ### 6. Make the connector reachable
 
-The connector listens on port 3000 of the server.
+The connector listens on port 3000 of the server, and it accepts connections only from the server itself.
 To make it reachable at the address you chose in step 1, configure the web server to forward the requests to it (that is, as a reverse proxy).
 
 The examples below are for nginx, but you can do the same with Apache, Caddy, or other web servers.
@@ -429,7 +431,7 @@ For every site you need:
 
 - its own API integration in Concrete CMS (see [Set up the Concrete CMS API](concrete-api.md))
 - its own file with the settings, with the `CONCRETE_*` settings of that site
-- its own `HTTP_PORT`, if the connectors run on the same server: it is the internal port the web server forwards the requests to, and it is not part of the address (change it in the service too, because the example in step 5 sets it there)
+- its own `HTTP_PORT`, if the connectors run on the same server: it is the internal port the web server forwards the requests to, and it is not part of the address
 - its own address: a dedicated subdomain, or a different `PATH_PREFIX` on the same domain
 - its own service, and its own rules in the configuration of the web server
 
