@@ -144,6 +144,8 @@ Rate limiting applies to OAuth routes (10 requests/minute per IP by default).
 
 Access tokens are refreshed automatically when within 60 seconds of expiry (`TOKEN_REFRESH_BUFFER_MS`). The `obtained_at` timestamp records when tokens were last issued or refreshed.
 
-## Future improvements
+## OS keychain
 
-OS keychain storage (macOS Keychain, Linux libsecret) may be added as an alternative to encrypted files. Track as a follow-up enhancement.
+The connector does not save the tokens in the keychain of the operating system: it would need a native module, so the extension would no longer be a single file valid for every operating system.
+
+With the prebuilt extension you get a similar result by setting the Token Encryption Key, which Claude Desktop keeps in the secure storage of the operating system: see [Local configuration](local-setup.md#prebuilt-extension).

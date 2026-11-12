@@ -44,6 +44,9 @@ The other fields are optional: you can leave them as they are.
 
 The _Setting_ column is the name used in the [Configuration reference](configuration.md), where you can find more details.
 
+Claude Desktop stores the Client Secret and the Token Encryption Key encrypted, using the secure storage of your operating system (for example the Keychain on macOS, or the Credential Manager on Windows).
+So, if you set a Token Encryption Key, the saved tokens are protected by a key that is not written in clear text on your computer.
+
 ## Manual configuration
 
 ### Build the connector
