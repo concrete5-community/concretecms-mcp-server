@@ -4,6 +4,8 @@ import {
   AuthProvider,
   StreamableHttpServerTransport,
   OpenAPIMCPServerConfig,
+  ToolsManager,
+  type ExtraToolDefinition,
 } from '@ivotoby/openapi-mcp-server'
 import { DebugName } from '../httpDebug.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
@@ -16,18 +18,49 @@ import {
   mcpEndpointPath,
   oauthStartPath,
   publicBaseUrl,
+  scope,
   transportType,
 } from '../env.js'
 import { OPENAPI_SPEC_FILE } from '../paths.js'
-import { createPageTools } from '../tools/pageTools.js'
+import { createPageTools, PAGE_TOOL_SCOPES } from '../tools/pageTools.js'
 import { createConnectionTools } from '../tools/connectionTools.js'
+import { createUnavailableToolsDefinition } from '../tools/unavailableTools.js'
 import { applyGeneratedToolAnnotations } from '../tools/annotations.js'
 import { applyLibraryHttpDebug } from '../httpDebug.js'
-import { fetchLiveOpenApiSpec, buildServerInstructions } from '../cms/openApiSpec.js'
+import { fetchLiveOpenApiSpec, buildServerInstructions, GUIDE_TOOL } from '../cms/openApiSpec.js'
+import {
+  hasAllScopes,
+  parseScopes,
+  selectGeneratedTools,
+  type SelectedTools,
+  type SpecLike,
+  type UnavailableTool,
+} from '../tools/scopeFilter.js'
+import { redactError } from '../utils/redact.js'
 
 export interface McpServerOptions {
   transport?: 'stdio' | 'http'
   httpServer?: Server
+}
+
+/** Split the generated tools by what the configured scopes allow, or null to expose them all. */
+async function selectAllowedTools(
+  config: OpenAPIMCPServerConfig,
+  granted: string[]
+): Promise<SelectedTools | null> {
+  try {
+    // A first pass over the spec, only to learn which scopes every tool needs.
+    const probe = new ToolsManager({ ...config, toolsMode: 'all', verbose: false })
+    await probe.initialize()
+    return selectGeneratedTools(
+      probe.getToolsWithIds(),
+      probe.getOpenApiSpec() as unknown as SpecLike | undefined,
+      granted
+    )
+  } catch (error) {
+    log(`Could not filter the tools by scope, exposing them all: ${redactError(error)}`)
+    return null
+  }
 }
 
 export async function startMcpServer(
@@ -46,9 +79,6 @@ export async function startMcpServer(
       : 'Using the bundled OpenAPI spec (openapi.yml)'
   )
 
-  // When the live spec exposes the usage guide, point agents at it.
-  const instructions = liveSpec ? buildServerInstructions(liveSpec) : undefined
-
   const openApiServerConfig: OpenAPIMCPServerConfig = {
     name: 'Concrete CMS',
     version: '1.0.0',
@@ -58,7 +88,6 @@ export async function startMcpServer(
     openApiSpec: liveSpec ? '' : OPENAPI_SPEC_FILE,
     specInputMethod: liveSpec ? 'inline' : 'file',
     inlineSpecContent: liveSpec ?? undefined,
-    instructions,
     transportType: transport,
     httpPort,
     httpHost,
@@ -66,8 +95,45 @@ export async function startMcpServer(
     toolsMode: 'all',
     disableAbbreviation: true,
     authProvider,
-    extraTools: [...createPageTools(authProvider), ...createConnectionTools()],
   }
+
+  const granted = parseScopes(scope || 'account:read')
+  const allowed = await selectAllowedTools(openApiServerConfig, granted)
+  // Null when the scopes could not be checked: every tool is exposed.
+  const unavailable: UnavailableTool[] | null = allowed ? [...allowed.unavailable] : null
+  if (allowed) {
+    // In 'all' mode an empty list would mean "no filter".
+    openApiServerConfig.toolsMode = 'explicit'
+    openApiServerConfig.includeTools = allowed.ids
+  }
+
+  // When the live spec exposes the usage guide, point agents at it (if they can read it).
+  if (liveSpec && (!allowed || allowed.names.includes(GUIDE_TOOL))) {
+    openApiServerConfig.instructions = buildServerInstructions(liveSpec)
+  }
+
+  const extraTools: ExtraToolDefinition[] = []
+  for (const definition of createPageTools(authProvider)) {
+    const required = PAGE_TOOL_SCOPES[definition.id] ?? []
+    if (!unavailable || hasAllScopes(required, granted)) {
+      extraTools.push(definition)
+      continue
+    }
+    unavailable.push({
+      name: definition.tool.name,
+      description: definition.tool.description ?? '',
+      scopes: required.filter((needed) => !granted.includes(needed)),
+      needs: 'all',
+    })
+  }
+  if (unavailable && unavailable.length > 0) {
+    log(`Hiding ${unavailable.length} tools that the configured scopes do not allow to use`)
+  }
+  openApiServerConfig.extraTools = [
+    ...extraTools,
+    ...createConnectionTools(),
+    createUnavailableToolsDefinition(unavailable),
+  ]
 
   const openApiServer = new OpenAPIServer(openApiServerConfig)
 

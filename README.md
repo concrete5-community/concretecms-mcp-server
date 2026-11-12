@@ -67,6 +67,14 @@ Prefer these when reviewing or editing page copy. Use the raw OpenAPI tools (`ge
 
 Required OAuth scopes for the update helper: `pages:read`, `pages:update`, `pages:areas:update_blocks`.
 
+### Tools and scopes
+
+The AI agent sees only the tools that the scopes of the connector allow to use: the fewer the scopes, the fewer the tools.
+
+The `list_unavailable_tools` tool lists the hidden tools with the scopes they need: when the AI agent cannot do what you ask, it can tell you which scope would make it possible.
+
+See [Choose the scopes](docs/concrete-api.md#3-choose-the-scopes).
+
 ### Connection check
 
 The `check_connection` tool verifies that the connector can work with your Concrete CMS site, without signing in.

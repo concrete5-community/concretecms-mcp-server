@@ -1,5 +1,6 @@
 import { log } from '../log.js'
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
+import { normalizeId } from './scopeFilter.js'
 
 export type ToolAnnotations = NonNullable<Tool['annotations']>
 
@@ -43,11 +44,6 @@ interface ToolsManagerLike {
 
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options']
 const MAX_SUMMARY_TITLE_LENGTH = 60
-
-/** Lowercase and strip separators so `get-block-by-id` matches `getBlockById`. */
-function normalizeId(value: string): string {
-  return value.toLowerCase().replace(/[^a-z0-9]/g, '')
-}
 
 /** Turn a tool name into a human title, e.g. `delete-page-by-id` -> `Delete page by ID`. */
 function humanizeName(name: string): string {
