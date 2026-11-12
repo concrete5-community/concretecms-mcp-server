@@ -27,7 +27,7 @@ Claude Desktop then asks for the settings:
 | Canonical URL                 | The URL of your Concrete CMS site                                               |
 | API Integration Client ID     | The Client ID of the API integration                                            |
 | API Integration Client Secret | The Client Secret of the API integration                                        |
-| API Integration Client Scopes | The [scopes](concrete-api.md#3-choose-the-scopes) you want, separated by spaces |
+| API Integration Scopes        | The [scopes](concrete-api.md#3-choose-the-scopes) you want, separated by spaces |
 
 The other fields are optional: you can leave them as they are.
 

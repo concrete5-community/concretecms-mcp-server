@@ -2,7 +2,7 @@
   "$schema": "https://raw.githubusercontent.com/modelcontextprotocol/mcpb/refs/heads/main/schemas/mcpb-manifest-v0.2.schema.json",
   "manifest_version": "0.2",
   "name": "concretecms-mcp-server",
-  "display_name": "ConcreteCMS MCP Server",
+  "display_name": "Concrete CMS MCP Server",
   "version": "0.0.0",
   "description": "A Model Context Protocol (MCP) server that integrates with Concrete CMS's REST API",
   "author": {
@@ -44,35 +44,35 @@
     "CONCRETE_CANONICAL_URL": {
       "type": "string",
       "title": "Canonical URL",
-      "description": "The URL of your ConcreteCMS installation",
+      "description": "The URL of your Concrete CMS site (for example: https://www.example.com)",
       "required": true,
       "sensitive": false
     },
     "CONCRETE_API_CLIENT_ID": {
       "type": "string",
       "title": "API Integration Client ID",
-      "description": "The Client ID of your ConcreteCMS integration",
+      "description": "The Client ID of the API integration created in your Concrete CMS site",
       "required": true,
       "sensitive": false
     },
     "CONCRETE_API_CLIENT_SECRET": {
       "type": "string",
       "title": "API Integration Client Secret",
-      "description": "The Client Secret of your ConcreteCMS integration",
+      "description": "The Client Secret of the API integration created in your Concrete CMS site",
       "required": true,
       "sensitive": true
     },
     "CONCRETE_API_SCOPE": {
       "type": "string",
-      "title": "API Integration Client Scopes",
-      "description": "Space-separated list of API Integration Client scopes",
+      "title": "API Integration Scopes",
+      "description": "The scopes the connector asks for, separated by spaces (for example: account:read system:info:read pages:read)",
       "required": true,
       "sensitive": false
     },
     "HTTP_PORT": {
       "type": "number",
       "title": "Sign-in Port",
-      "description": "The local port used during the sign-in: it must be the port of the Redirect URI of your ConcreteCMS integration",
+      "description": "The local port used during the sign-in: it must be the port of the Redirect URI of the API integration (by default: http://localhost:3000/callback)",
       "required": false,
       "default": 3000,
       "sensitive": false,
@@ -82,7 +82,7 @@
     "TOKEN_ENCRYPTION_KEY": {
       "type": "string",
       "title": "Token Encryption Key",
-      "description": "A secret key used to encrypt the saved tokens (if empty, they are saved in plain text)\nGenerate with:\nnode -e \"console.log(require('crypto').randomBytes(32).toString('base64'))\"",
+      "description": "A password used to encrypt the saved tokens: any long random text. If empty, the tokens are saved in plain text",
       "required": false,
       "sensitive": true
     },
@@ -104,28 +104,31 @@
     "CONCRETE_ALLOW_INSECURE_HTTP": {
       "type": "boolean",
       "title": "Allow insecure HTTP",
-      "description": "Allow connecting to a Concrete server over plain HTTP instead of HTTPS. For local/development instances only - never enable against a production server (default: false)",
+      "description": "Allow connecting to a Concrete server over plain HTTP instead of HTTPS. For local/development instances only - never enable against a production server",
       "required": false,
+      "default": false,
       "sensitive": false
     },
     "OAUTH_DEBUG": {
       "type": "boolean",
       "title": "OAuth debug mode",
-      "description": "Enable debug logging for OAuth flows (default: false)",
+      "description": "Log more details about the sign-in",
       "required": false,
+      "default": false,
       "sensitive": false
     },
     "CONCRETE_API_DEBUG": {
       "type": "boolean",
       "title": "Concrete API debug mode",
-      "description": "Log Concrete REST requests and responses (method, URL, bodies, status) to the server log for troubleshooting. Sensitive fields are redacted and bodies truncated by default (default: false)",
+      "description": "Log the requests sent to Concrete CMS and the responses (method, URL, bodies, status) to the log of the extension, for troubleshooting. Sensitive fields are redacted and bodies are truncated",
       "required": false,
+      "default": false,
       "sensitive": false
     },
     "DEBUG_MAX_BODY": {
       "type": "number",
       "title": "Debug body limit",
-      "description": "Max number of characters logged for each request/response body in any debug output. Set to 0 to omit bodies from the log entirely (default: 2000)",
+      "description": "Max number of characters logged for each request/response body in any debug output. Set to 0 to omit bodies from the log entirely",
       "required": false,
       "default": 2000,
       "min": 0,
