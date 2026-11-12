@@ -24,6 +24,8 @@ jobs:
         run: npm run lint:check
       - name: Run tests
         run: npm test
+        env:
+          FORCE_COLOR: 1
       - name: Verify OAuth session binding
         run: npm run verify:oauth
       - name: Verify security
