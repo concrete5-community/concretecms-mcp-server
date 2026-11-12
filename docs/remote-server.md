@@ -224,61 +224,74 @@ The `limit_req` lines in the first example below apply it (remove them if you do
 
 #### Dedicated subdomain
 
+In the `server` block of the subdomain:
+
 ```nginx
-location /mcp {
+proxy_set_header Host $host;
+proxy_set_header X-Forwarded-Proto $scheme;
+# The connector limits the sign-in requests by IP address: tell it the address of the client
+proxy_set_header X-Forwarded-For $remote_addr;
+
+location = /mcp {
     proxy_pass http://127.0.0.1:3000;
     proxy_http_version 1.1;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-Proto $scheme;
     proxy_buffering off;
+    # The AI agents keep a connection open to receive the answers: do not close it when it is idle
+    proxy_read_timeout 1h;
 }
 
 location = /oauth/start {
     limit_req zone=mcp_oauth burst=5 nodelay;
     proxy_pass http://127.0.0.1:3000;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-Proto $scheme;
 }
 
 location = /oauth/callback {
     limit_req zone=mcp_oauth burst=5 nodelay;
     proxy_pass http://127.0.0.1:3000;
-    proxy_set_header Host $host;
-    proxy_set_header X-Forwarded-Proto $scheme;
 }
 
 location = /oauth/status {
     proxy_pass http://127.0.0.1:3000;
-    proxy_set_header Host $host;
 }
 
 location = /oauth/revoke {
     proxy_pass http://127.0.0.1:3000;
-    proxy_set_header Host $host;
 }
 
 location = /health {
     proxy_pass http://127.0.0.1:3000;
-    proxy_set_header Host $host;
 }
 ```
 
+The three `proxy_set_header` lines apply to all the `location` blocks, as long as none of them contains a `proxy_set_header` line of its own.
+
 #### Same domain, with `PATH_PREFIX=/ccm-mcp`
 
+Here the `server` block is the one of your site, so the `proxy_set_header` lines are repeated in every `location` block.
+
 ```nginx
-location /ccm-mcp/mcp {
+location = /ccm-mcp/mcp {
     proxy_pass http://127.0.0.1:3000;
     proxy_http_version 1.1;
     proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
     proxy_buffering off;
+    proxy_read_timeout 1h;
 }
 
 location /ccm-mcp/oauth/ {
     proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
 }
 
 location /ccm-mcp/health {
     proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $remote_addr;
 }
 ```
 
