@@ -17,6 +17,7 @@ If you are the only user, and your AI agent runs on your computer, the [Local co
 - The address must be reachable by the AI agents and by the browsers of the people using them: it can be on the internet, or only inside your local network.
 - The AI agents connect to that address, using a key that you choose.
 - Every person signs in to Concrete CMS once, to authorize the connector to act on their behalf.
+- Run just one copy of the connector for every Concrete CMS site: do not put several copies behind a load balancer, because every copy keeps the connections of the AI agents and the sign-ins in progress in its own memory.
 
 ## What you need
 
