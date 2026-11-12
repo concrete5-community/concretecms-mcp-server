@@ -77,7 +77,8 @@ sudo mkdir -p /opt/concretecms-mcp
 sudo chown mcp:mcp /opt/concretecms-mcp
 cd /opt/concretecms-mcp
 sudo -u mcp git clone https://github.com/concrete5-community/concretecms-mcp-server.git .
-sudo -u mcp npm ci
+# --include=dev is required to build the connector when NODE_ENV is set to production
+sudo -u mcp npm ci --include=dev
 sudo -u mcp npm run build
 ```
 
@@ -197,7 +198,8 @@ To update the connector to a newer version:
 ```bash
 cd /opt/concretecms-mcp
 sudo -u mcp git pull
-sudo -u mcp npm ci
+# --include=dev is required to build the connector when NODE_ENV is set to production
+sudo -u mcp npm ci --include=dev
 sudo -u mcp npm run build
 sudo systemctl restart concretecms-mcp
 ```
