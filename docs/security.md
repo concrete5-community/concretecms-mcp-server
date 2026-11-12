@@ -89,6 +89,7 @@ When the server runs remotely (`TRANSPORT_TYPE=http`):
 - `MCP_API_KEY` or `MCP_API_KEYS` is **required** — clients must authenticate to `/mcp` and OAuth admin routes
 - Each CMS user authorizes separately; tokens are stored per user ID
 - `TOKEN_DIR` must not be world-writable; run the service as a dedicated OS user
+- On Windows the connector cannot verify the permissions of `TOKEN_DIR`, and the `0600` mode of the token files has no effect: protect the directory with the Windows permissions (ACLs)
 - `/oauth/start` returns `409` if an OAuth flow is already in progress for that user
 
 ### Client authentication

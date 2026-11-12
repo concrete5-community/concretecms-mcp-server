@@ -90,7 +90,10 @@ assert(
 const raw = readFileSync(join(cmsSiteDir, '42.tokens.json'), 'utf-8')
 const parsed = JSON.parse(raw)
 assert(parsed.iv && parsed.tag && parsed.data, 'file is encrypted envelope')
-assert((statSync(join(cmsSiteDir, '42.tokens.json')).mode & 0o777) === 0o600, 'file mode 0600')
+// On Windows the mode bits do not describe the ACLs
+if (process.platform !== 'win32') {
+  assert((statSync(join(cmsSiteDir, '42.tokens.json')).mode & 0o777) === 0o600, 'file mode 0600')
+}
 
 clearTokens('42')
 assert(!existsSync(join(cmsSiteDir, '42.tokens.json')), 'clearTokens removes user tokens file')
