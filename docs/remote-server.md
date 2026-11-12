@@ -312,10 +312,10 @@ Reload the web server after changing its configuration.
 curl https://mcp.example.com/health
 ```
 
-The answer must be:
+The answer must contain `"status": "healthy"`, for example:
 
 ```json
-{ "status": "healthy" }
+{ "status": "healthy", "activeSessions": 0, "uptime": 120 }
 ```
 
 ## Docker (alternative)

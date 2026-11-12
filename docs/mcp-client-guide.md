@@ -111,8 +111,10 @@ Requests without `Authorization` return `401`. Requests without `X-Concrete-User
 curl -s "$MCP_SERVER_URL/health"
 ```
 
+The answer contains `"status": "healthy"`, for example:
+
 ```json
-{ "status": "healthy" }
+{ "status": "healthy", "activeSessions": 0, "uptime": 120 }
 ```
 
 ### Example: check OAuth status

@@ -89,10 +89,10 @@ If you see `(stdio transport)` instead, the server is **not** listening on HTTP 
 curl http://127.0.0.1:3000/health
 ```
 
-Expected response:
+The answer must contain `"status": "healthy"`, for example:
 
 ```json
-{ "status": "healthy" }
+{ "status": "healthy", "activeSessions": 0, "uptime": 120 }
 ```
 
 **OAuth status** (requires API key):
