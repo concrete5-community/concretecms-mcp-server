@@ -15,6 +15,7 @@ and every pull request, on Node 22, 24 and 26, and must pass:
 
 - `npm run lint:check`
 - `npm run build`
+- `npm test`
 - `npm run verify:oauth`
 - `npm run verify:security`
 - `npm audit --audit-level=moderate`
