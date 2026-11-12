@@ -59,7 +59,7 @@ export async function fetchLiveOpenApiSpec(): Promise<string | null> {
 }
 
 const GUIDE_OPERATION_ID = 'getSystemGuide'
-const GUIDE_TOOL = 'get-system-guide'
+export const GUIDE_TOOL = 'get-system-guide'
 
 // MCP server instructions handed to the client. Kept short: sent every session.
 const GUIDE_INSTRUCTIONS =

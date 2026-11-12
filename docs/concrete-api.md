@@ -42,5 +42,6 @@ account:read system:info:read pages:read
 Please note that:
 
 - `account:read` is required when the connector runs on a server.
+- The AI agent sees only the tools that the scopes allow to use: with fewer scopes it has fewer tools to choose from, and it works with less context. It can still list the hidden tools, to tell you which scope it would need for a request it cannot fulfill.
 - The available scopes depend on the version of Concrete CMS: asking for a scope that does not exist in your site makes the sign-in fail with an `invalid_scope` error.
 - `openid` is ignored, because the connector does not use it.

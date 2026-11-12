@@ -191,6 +191,12 @@ function formatToolError(error: unknown): string {
   return String(error)
 }
 
+/** The scopes every page tool needs, all of them. */
+export const PAGE_TOOL_SCOPES: Record<string, string[]> = {
+  get_page_content: ['pages:read'],
+  update_page_content: ['pages:read', 'pages:update', 'pages:areas:update_blocks'],
+}
+
 export function createPageTools(authProvider: AuthProvider): ExtraToolDefinition[] {
   const client = new CmsApiClient(authProvider)
 
