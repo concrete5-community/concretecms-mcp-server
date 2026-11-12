@@ -67,6 +67,21 @@ Prefer these when reviewing or editing page copy. Use the raw OpenAPI tools (`ge
 
 Required OAuth scopes for the update helper: `pages:read`, `pages:update`, `pages:areas:update_blocks`.
 
+### Connection check
+
+The `check_connection` tool verifies that the connector can work with your Concrete CMS site, without signing in.
+To use it, ask your AI agent something like "check the connection to my Concrete CMS site".
+
+It checks that:
+
+- the site is reachable
+- the pretty URLs and the API are enabled
+- the web server passes the `Authorization` header to Concrete CMS
+- the API integration accepts the Client ID, the Redirect URI and the scopes of the connector
+
+For every failed check, it tells how to fix it.
+It does not check the Client Secret, which is verified when you sign in.
+
 ## Documentation
 
 - [Local configuration](docs/local-setup.md): how to run the connector on your computer

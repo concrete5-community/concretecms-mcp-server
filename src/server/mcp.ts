@@ -20,6 +20,7 @@ import {
 } from '../env.js'
 import { OPENAPI_SPEC_FILE } from '../paths.js'
 import { createPageTools } from '../tools/pageTools.js'
+import { createConnectionTools } from '../tools/connectionTools.js'
 import { applyGeneratedToolAnnotations } from '../tools/annotations.js'
 import { applyLibraryHttpDebug } from '../httpDebug.js'
 import { fetchLiveOpenApiSpec, buildServerInstructions } from '../cms/openApiSpec.js'
@@ -65,7 +66,7 @@ export async function startMcpServer(
     toolsMode: 'all',
     disableAbbreviation: true,
     authProvider,
-    extraTools: createPageTools(authProvider),
+    extraTools: [...createPageTools(authProvider), ...createConnectionTools()],
   }
 
   const openApiServer = new OpenAPIServer(openApiServerConfig)

@@ -407,6 +407,8 @@ How to configure them depends on the AI agent:
 - AI agents running on a computer (for example Claude Desktop or ChatGPT): see [Connect an AI agent on your computer to a remote connector](local-clients.md)
 - your own application or AI agent: see the [Developer guide](mcp-client-guide.md)
 
+Once an AI agent is connected, ask it to "check the connection to my Concrete CMS site": it tells what is wrong in the configuration and how to fix it, even before the user is authorized (see [Connection check](../README.md#connection-check)).
+
 For developers: the connector uses the [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports) transport of MCP, and every request must include these headers:
 
 ```

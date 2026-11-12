@@ -3,13 +3,13 @@ import * as client from 'openid-client'
 import { createServer } from 'node:http'
 import { exec } from 'node:child_process'
 import { config } from './oidc.js'
-import { httpPort, scope, stdioUserKey } from '../env.js'
+import { httpPort, scope, stdioRedirectUri, stdioUserKey } from '../env.js'
 import { UserTokenSession } from './UserTokenSession.js'
 import { exchangeAuthorizationCode, saveTokensForStdioUser } from './oauthTokens.js'
 import { redactError } from '../utils/redact.js'
 
 export async function performOAuthFlow(authProvider: UserTokenSession): Promise<void> {
-  const redirect_uri = `http://localhost:${httpPort}/callback`
+  const redirect_uri = stdioRedirectUri
   const code_verifier = client.randomPKCECodeVerifier()
   const code_challenge = await client.calculatePKCECodeChallenge(code_verifier)
 

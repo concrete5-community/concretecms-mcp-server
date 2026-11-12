@@ -113,6 +113,7 @@ export const publicBaseUrl = (() => {
 })()
 
 export const oauthRedirectUri = `${publicBaseUrl}${oauthCallbackPath}`
+export const stdioRedirectUri = `http://localhost:${httpPort}/callback`
 
 export type McpApiKeyEntry = {
   key: string
