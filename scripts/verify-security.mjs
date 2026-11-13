@@ -67,37 +67,50 @@ console.log('Token store tests')
 
 const { saveTokens, loadTokens, clearTokens } = await importTokenStore(baseEnv())
 
+const SAMPLE_ACCESS_TOKEN = 'access-abc'
+const SAMPLE_REFRESH_TOKEN = 'refresh-xyz'
+const SAMPLE_USER_ID = 42
+
 const sampleTokens = {
-  access_token: 'access-abc',
-  refresh_token: 'refresh-xyz',
+  access_token: SAMPLE_ACCESS_TOKEN,
+  refresh_token: SAMPLE_REFRESH_TOKEN,
   expires_at: Date.now() + 3_600_000,
   parameters: { redirect_uri: 'http://localhost/callback', scope: 'account:read' },
-  cms_user_id: 42,
+  cms_user_id: SAMPLE_USER_ID,
 }
 
-saveTokens('42', sampleTokens, sampleTokens.parameters)
-const loaded = await loadTokens('42')
-assert(loaded?.access_token === 'access-abc', 'encrypt/decrypt round-trip')
+saveTokens(`${SAMPLE_USER_ID}`, sampleTokens, sampleTokens.parameters)
+const loaded = await loadTokens(`${SAMPLE_USER_ID}`)
+assert(loaded?.access_token === SAMPLE_ACCESS_TOKEN, 'encrypt/decrypt round-trip')
 assert(
-  existsSync(join(cmsSiteDir, '42.tokens.json')),
+  existsSync(join(cmsSiteDir, `${SAMPLE_USER_ID}.tokens.json`)),
   'per-user tokens file created in site directory'
 )
 assert(
-  existsSync(join(cmsSiteDir, '42.client.json')),
+  existsSync(join(cmsSiteDir, `${SAMPLE_USER_ID}.client.json`)),
   'per-user client file created in site directory'
 )
 
-const raw = readFileSync(join(cmsSiteDir, '42.tokens.json'), 'utf-8')
+const raw = readFileSync(join(cmsSiteDir, `${SAMPLE_USER_ID}.tokens.json`), 'utf-8')
 const parsed = JSON.parse(raw)
 assert(parsed.iv && parsed.tag && parsed.data, 'file is encrypted envelope')
 // On Windows the mode bits do not describe the ACLs
 if (process.platform !== 'win32') {
-  assert((statSync(join(cmsSiteDir, '42.tokens.json')).mode & 0o777) === 0o600, 'file mode 0600')
+  assert(
+    (statSync(join(cmsSiteDir, `${SAMPLE_USER_ID}.tokens.json`)).mode & 0o777) === 0o600,
+    'file mode 0600'
+  )
 }
 
-clearTokens('42')
-assert(!existsSync(join(cmsSiteDir, '42.tokens.json')), 'clearTokens removes user tokens file')
-assert(!existsSync(join(cmsSiteDir, '42.client.json')), 'clearTokens removes user client file')
+clearTokens(`${SAMPLE_USER_ID}`)
+assert(
+  !existsSync(join(cmsSiteDir, `${SAMPLE_USER_ID}.tokens.json`)),
+  'clearTokens removes user tokens file'
+)
+assert(
+  !existsSync(join(cmsSiteDir, `${SAMPLE_USER_ID}.client.json`)),
+  'clearTokens removes user client file'
+)
 
 console.log('\nMulti-site namespace test')
 
@@ -122,7 +135,7 @@ const storeAReload = await importTokenStore({
   CONCRETE_CANONICAL_URL: siteA,
 })
 assert(
-  storeAReload.loadTokens('local')?.access_token === 'access-abc',
+  storeAReload.loadTokens('local')?.access_token === SAMPLE_ACCESS_TOKEN,
   'site A tokens remain isolated'
 )
 
@@ -220,10 +233,10 @@ try {
   const health = await request('/health')
   assert(health.status === 200, '/health is public')
 
-  const oauthNoAuth = await request('/oauth/status?user_id=42')
+  const oauthNoAuth = await request(`/oauth/status?user_id=${SAMPLE_USER_ID}`)
   assert(oauthNoAuth.status === 401, '/oauth/status requires MCP_API_KEY')
 
-  const wrongKey = await fetch('http://127.0.0.1:3999/oauth/status?user_id=42', {
+  const wrongKey = await fetch(`http://127.0.0.1:3999/oauth/status?user_id=${SAMPLE_USER_ID}`, {
     headers: { Authorization: 'Bearer wrong' },
   })
   assert(
