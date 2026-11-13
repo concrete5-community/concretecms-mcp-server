@@ -62,14 +62,17 @@ node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
 
 You usually do not need these settings: they change the paths of the remote connector.
 
-| Setting               | Local    | Remote   | Default                        | Description           |
-| --------------------- | -------- | -------- | ------------------------------ | --------------------- |
-| `MCP_ENDPOINT_PATH`   | Not used | Optional | `{PATH_PREFIX}/mcp`            | The MCP endpoint      |
-| `OAUTH_START_PATH`    | Not used | Optional | `{PATH_PREFIX}/oauth/start`    | Starts the sign-in    |
-| `OAUTH_CALLBACK_PATH` | Not used | Optional | `{PATH_PREFIX}/oauth/callback` | The Redirect URI path |
-| `OAUTH_STATUS_PATH`   | Not used | Optional | `{PATH_PREFIX}/oauth/status`   | The sign-in status    |
-| `OAUTH_REVOKE_PATH`   | Not used | Optional | `{PATH_PREFIX}/oauth/revoke`   | Revokes the tokens    |
-| `HEALTH_PATH`         | Not used | Optional | `{PATH_PREFIX}/health`         | The health check      |
+| Setting               | Local    | Remote   | Default                        | Description                     |
+| --------------------- | -------- | -------- | ------------------------------ | ------------------------------- |
+| `MCP_ENDPOINT_PATH`   | Not used | Optional | `{PATH_PREFIX}/mcp`            | The MCP endpoint                |
+| `OAUTH_START_PATH`    | Not used | Optional | `{PATH_PREFIX}/oauth/start`    | Starts the sign-in              |
+| `OAUTH_CALLBACK_PATH` | Not used | Optional | `{PATH_PREFIX}/oauth/callback` | The Redirect URI path           |
+| `OAUTH_STATUS_PATH`   | Not used | Optional | `{PATH_PREFIX}/oauth/status`   | The sign-in status              |
+| `OAUTH_REVOKE_PATH`   | Not used | Optional | `{PATH_PREFIX}/oauth/revoke`   | Revokes the tokens              |
+| `HEALTH_PATH`         | Not used | Optional | `{PATH_PREFIX}/health`         | The health check                |
+| `ADMIN_PATH`          | Not used | Optional | `{PATH_PREFIX}/admin`          | The page to authorize the users |
+
+To disable the page to authorize the users, set `ADMIN_PATH` to `false`.
 
 ## Troubleshooting
 

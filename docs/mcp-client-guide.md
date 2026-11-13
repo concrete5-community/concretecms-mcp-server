@@ -76,14 +76,15 @@ Set `MCP_SERVER_URL` to the server's public base URL (same as `PUBLIC_BASE_URL`)
 
 ### Endpoints
 
-| Path              | Method | Authentication    | Purpose                                   |
-| ----------------- | ------ | ----------------- | ----------------------------------------- |
-| `/mcp`            | POST   | API key + user ID | MCP JSON-RPC (tools)                      |
-| `/oauth/start`    | GET    | API key           | Begin per-user OAuth                      |
-| `/oauth/status`   | GET    | API key           | Check if user is authorized               |
-| `/oauth/revoke`   | POST   | API key           | Revoke user tokens                        |
-| `/oauth/callback` | GET    | Public            | CMS OAuth redirect (do not call manually) |
-| `/health`         | GET    | Public            | Liveness check                            |
+| Path              | Method | Authentication    | Purpose                                    |
+| ----------------- | ------ | ----------------- | ------------------------------------------ |
+| `/mcp`            | POST   | API key + user ID | MCP JSON-RPC (tools)                       |
+| `/oauth/start`    | GET    | API key           | Begin per-user OAuth                       |
+| `/oauth/status`   | GET    | API key           | Check if user is authorized                |
+| `/oauth/revoke`   | POST   | API key           | Revoke user tokens                         |
+| `/oauth/callback` | GET    | Public            | CMS OAuth redirect (do not call manually)  |
+| `/health`         | GET    | Public            | Liveness check                             |
+| `/admin`          | GET    | Public            | Page to authorize the users from a browser |
 
 ### Headers for `/mcp`
 
@@ -138,6 +139,12 @@ curl -s -D - -H "Authorization: Bearer $MCP_API_KEY" \
 ```
 
 Expected: `HTTP 302` with `Location:` pointing to the CMS authorize page. Open that URL in a browser; the user signs in and approves scopes.
+
+A web page cannot read the `Location` header of a redirect: send the `Accept: application/json` header to receive the same URL in a `200` answer instead.
+
+```json
+{ "authorizationUrl": "https://www.example.com/oauth/2.0/authorize?..." }
+```
 
 If another OAuth flow is already running for that user, the server returns `409`:
 

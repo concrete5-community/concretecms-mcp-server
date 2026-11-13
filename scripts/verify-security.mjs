@@ -222,11 +222,55 @@ try {
 
   const oauthNoAuth = await request('/oauth/status?user_id=42')
   assert(oauthNoAuth.status === 401, '/oauth/status requires MCP_API_KEY')
+
+  const wrongKey = await fetch('http://127.0.0.1:3999/oauth/status?user_id=42', {
+    headers: { Authorization: 'Bearer wrong' },
+  })
+  assert(
+    wrongKey.status === 401 && !wrongKey.headers.has('www-authenticate'),
+    'a wrong key does not make the browsers ask for a password'
+  )
+
+  const admin = await fetch('http://127.0.0.1:3999/admin')
+  assert(
+    admin.status === 200 &&
+      admin.headers.get('content-security-policy')?.includes("default-src 'none'"),
+    '/admin is public and has a strict content security policy'
+  )
 } catch (error) {
   console.error('HTTP tests error:', error.message)
   failed++
 } finally {
   server.kill()
+}
+
+console.log('\nDisabled admin page test')
+
+const serverWithoutAdmin = spawn('node', ['dist/index.js'], {
+  cwd: projectRoot,
+  env: { ...process.env, ...baseEnv({ ADMIN_PATH: 'false' }) },
+  stdio: ['ignore', 'pipe', 'pipe'],
+})
+
+await new Promise((resolve) => setTimeout(resolve, 2500))
+
+try {
+  const health = await request('/health')
+  assert(health.status === 200, 'the connector runs with ADMIN_PATH=false')
+
+  // Nothing answers to an unknown path: the request is aborted
+  const answered = await fetch('http://127.0.0.1:3999/admin', {
+    signal: AbortSignal.timeout(1000),
+  }).then(
+    () => true,
+    () => false
+  )
+  assert(!answered, '/admin is not served with ADMIN_PATH=false')
+} catch (error) {
+  console.error('HTTP tests error:', error.message)
+  failed++
+} finally {
+  serverWithoutAdmin.kill()
 }
 
 rmSync(testDir, { recursive: true, force: true })

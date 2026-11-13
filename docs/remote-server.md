@@ -264,6 +264,15 @@ location = /health {
     proxy_pass http://127.0.0.1:3000;
 }
 
+# The page to authorize the users: remove this block if you prefer to use the shell commands
+location = /admin {
+    # Optional: only allow the following IP addresses
+    # allow 1.2.3.4;
+    # allow 5.6.7.8;
+    # deny all;
+    proxy_pass http://127.0.0.1:3000;
+}
+
 # Nothing else is served by this subdomain
 location / {
     return 404;
@@ -358,12 +367,31 @@ Every person must authorize the connector once, by signing in to Concrete CMS.
 After that, the connector acts in Concrete CMS with the permissions of that person.
 
 In a local configuration the connector opens the browser for you.
-A remote connector cannot do that: someone who knows the key must start the sign-in with a command, and the person to authorize completes it in a browser.
+A remote connector cannot do that: someone who knows the key must start the sign-in, and the person to authorize completes it in a browser.
 
 You need:
 
 - the ID of the Concrete CMS user (`42` in these examples)
 - the key for the AI agents, that is the `MCP_API_KEY` you generated in step 4 (`$MCP_API_KEY` in these examples)
+
+You can start the sign-in with the page of the connector, or with shell commands.
+
+### With the page of the connector
+
+If the connector has a dedicated subdomain, and the web server forwards the `/admin` path to it (see step 6), open `https://mcp.example.com/admin` in a browser.
+
+Enter the key and the ID of the user, then choose what to do:
+
+- _Authorize_ gives you an address: the person to authorize must open it in a browser within 10 minutes, sign in to Concrete CMS, and approve the scopes
+- _Check the authorization_ tells if the user is authorized
+- _Revoke the authorization_ removes the authorization of the user
+
+The page does not save the key, and it sends it only to the connector.
+
+Do not use the page if the connector shares the domain with your Concrete CMS site: any script running in the pages of the site could read the key you type.
+In that case, use the shell commands.
+
+### With shell commands
 
 To authorize a user:
 
