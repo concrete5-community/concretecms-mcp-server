@@ -191,10 +191,13 @@ function formatToolError(error: unknown): string {
   return String(error)
 }
 
-/** The scopes every page tool needs, all of them. */
-export const PAGE_TOOL_SCOPES: Record<string, string[]> = {
-  get_page_content: ['pages:read'],
-  update_page_content: ['pages:read', 'pages:update', 'pages:areas:update_blocks'],
+/**
+ * The API operations called by every page tool.
+ * Their scopes are read from the spec, because they are not the same in every Concrete CMS version.
+ */
+export const PAGE_TOOL_OPERATIONS: Record<string, string[]> = {
+  get_page_content: ['getPageById'],
+  update_page_content: ['getPageById', 'updatePageById', 'updateBlockInPageArea'],
 }
 
 export function createPageTools(authProvider: AuthProvider): ExtraToolDefinition[] {

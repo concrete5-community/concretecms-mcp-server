@@ -3,8 +3,8 @@ import { describe, it } from 'node:test'
 import type { Tool } from '@modelcontextprotocol/sdk/types.js'
 import {
   formatUnavailableTools,
-  hasAllScopes,
   isOperationAllowed,
+  missingScopes,
   parseScopes,
   scopesByOperation,
   selectGeneratedTools,
@@ -77,11 +77,51 @@ describe('isOperationAllowed', () => {
   })
 })
 
-describe('hasAllScopes', () => {
-  it('needs every scope', () => {
-    assert.equal(hasAllScopes(['pages:read', 'pages:update'], ['pages:read']), false)
-    assert.equal(hasAllScopes(['pages:read', 'pages:update'], ['pages:update', 'pages:read']), true)
-    assert.equal(hasAllScopes([], []), true)
+describe('missingScopes', () => {
+  const operationScopes = scopesByOperation(spec)
+
+  it('needs a scope for every operation', () => {
+    assert.deepEqual(missingScopes(['getPages', 'addPage'], operationScopes, ['pages:read']), [
+      'pages:add',
+    ])
+    assert.deepEqual(missingScopes(['getPages', 'addPage'], operationScopes, []), [
+      'pages:read',
+      'pages:add',
+    ])
+    assert.deepEqual(
+      missingScopes(['getPages', 'addPage'], operationScopes, ['pages:add', 'pages:read']),
+      []
+    )
+  })
+
+  it('reads the scopes from the spec in use', () => {
+    const otherSpec: SpecLike = {
+      paths: {
+        '/ccm/api/1.0/pages': {
+          post: { operationId: 'addPage', security: [{ authorization: ['pages:create'] }] },
+        },
+      },
+    }
+
+    assert.deepEqual(missingScopes(['addPage'], scopesByOperation(otherSpec), ['pages:add']), [
+      'pages:create',
+    ])
+  })
+
+  it('suggests one scope when any of them is enough', () => {
+    assert.deepEqual(missingScopes(['getFiles'], operationScopes, []), ['files:read'])
+    assert.deepEqual(missingScopes(['getFiles'], operationScopes, ['files:admin']), [])
+  })
+
+  it('lists a scope once, and ignores the operations it knows nothing about', () => {
+    assert.deepEqual(
+      missingScopes(
+        ['getPages', 'getPages', 'getPublicThing', 'notInTheSpec'],
+        operationScopes,
+        []
+      ),
+      ['pages:read']
+    )
   })
 })
 
