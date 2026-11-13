@@ -24,6 +24,8 @@ export interface SelectedTools {
   ids: string[]
   names: string[]
   unavailable: UnavailableTool[]
+  /** The scopes of every operation of the spec, see scopesByOperation */
+  operationScopes: Map<string, string[]>
 }
 
 const HTTP_METHODS = ['get', 'post', 'put', 'patch', 'delete', 'head', 'options']
@@ -68,9 +70,26 @@ export function isOperationAllowed(required: string[] | undefined, granted: stri
   return required.some((scope) => granted.includes(scope))
 }
 
-/** For the tools that call several operations: every scope is needed. */
-export function hasAllScopes(required: string[], granted: string[]): boolean {
-  return required.every((scope) => granted.includes(scope))
+/**
+ * For the tools that call several operations: the scopes still to be granted,
+ * one for every operation that the granted scopes do not allow to call.
+ */
+export function missingScopes(
+  operationIds: string[],
+  operationScopes: Map<string, string[]>,
+  granted: string[]
+): string[] {
+  const missing = new Set<string>()
+
+  for (const operationId of operationIds) {
+    const required = operationScopes.get(normalizeId(operationId))
+    if (required && !isOperationAllowed(required, granted)) {
+      // Any scope of the operation is enough: suggest the first one
+      missing.add(required[0])
+    }
+  }
+
+  return [...missing]
 }
 
 /** Split the generated tools between the ones the granted scopes allow to use, and the others. */
@@ -79,11 +98,11 @@ export function selectGeneratedTools(
   spec: SpecLike | undefined,
   granted: string[]
 ): SelectedTools {
-  const scopes = scopesByOperation(spec)
-  const selected: SelectedTools = { ids: [], names: [], unavailable: [] }
+  const operationScopes = scopesByOperation(spec)
+  const selected: SelectedTools = { ids: [], names: [], unavailable: [], operationScopes }
 
   for (const [id, tool] of toolsWithIds) {
-    const required = scopes.get(normalizeId(tool.name))
+    const required = operationScopes.get(normalizeId(tool.name))
     if (isOperationAllowed(required, granted)) {
       selected.ids.push(id)
       selected.names.push(tool.name)

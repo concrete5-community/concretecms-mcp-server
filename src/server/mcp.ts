@@ -22,14 +22,14 @@ import {
   transportType,
 } from '../env.js'
 import { OPENAPI_SPEC_FILE } from '../paths.js'
-import { createPageTools, PAGE_TOOL_SCOPES } from '../tools/pageTools.js'
+import { createPageTools, PAGE_TOOL_OPERATIONS } from '../tools/pageTools.js'
 import { createConnectionTools } from '../tools/connectionTools.js'
 import { createUnavailableToolsDefinition } from '../tools/unavailableTools.js'
 import { applyGeneratedToolAnnotations } from '../tools/annotations.js'
 import { applyLibraryHttpDebug } from '../httpDebug.js'
 import { fetchLiveOpenApiSpec, buildServerInstructions, GUIDE_TOOL } from '../cms/openApiSpec.js'
 import {
-  hasAllScopes,
+  missingScopes,
   parseScopes,
   selectGeneratedTools,
   type SelectedTools,
@@ -114,15 +114,17 @@ export async function startMcpServer(
 
   const extraTools: ExtraToolDefinition[] = []
   for (const definition of createPageTools(authProvider)) {
-    const required = PAGE_TOOL_SCOPES[definition.id] ?? []
-    if (!unavailable || hasAllScopes(required, granted)) {
+    const missing = allowed
+      ? missingScopes(PAGE_TOOL_OPERATIONS[definition.id] ?? [], allowed.operationScopes, granted)
+      : []
+    if (!unavailable || missing.length === 0) {
       extraTools.push(definition)
       continue
     }
     unavailable.push({
       name: definition.tool.name,
       description: definition.tool.description ?? '',
-      scopes: required.filter((needed) => !granted.includes(needed)),
+      scopes: missing,
       needs: 'all',
     })
   }

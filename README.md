@@ -65,7 +65,8 @@ In addition to OpenAPI-generated tools, the server exposes helpers for common pa
 
 Prefer these when reviewing or editing page copy. Use the raw OpenAPI tools (`getPageById`, `updateBlockInPageArea`, etc.) for lower-level control.
 
-Required OAuth scopes for the update helper: `pages:read`, `pages:update`, `pages:areas:update_blocks`.
+The update helper needs the scopes of the operations it calls (`getPageById`, `updatePageById`, `updateBlockInPageArea`): usually `pages:read`, `pages:update` and `pages:areas:update_blocks`, but their names may differ in your Concrete CMS version.
+When it is hidden, the `list_unavailable_tools` tool tells which scopes are missing.
 
 ### Tools and scopes
 
