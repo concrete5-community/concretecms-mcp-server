@@ -171,6 +171,12 @@ async function handleOAuthStart(
       lockUserId
     )
 
+    // A web page cannot read the Location header of a redirect
+    if (req.headers.accept?.includes('application/json')) {
+      sendJson(res, 200, { authorizationUrl: authorizationUrl.toString() })
+      return
+    }
+
     res.writeHead(302, { Location: authorizationUrl.toString() })
     res.end()
     blockFurtherResponseWrites(res)

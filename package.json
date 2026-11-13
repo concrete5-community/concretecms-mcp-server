@@ -13,7 +13,7 @@
     "start": "node dist/index.js",
     "watch": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "test": "npm run build && node --enable-source-maps --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=@reporters/github --test-reporter-destination=stdout dist/tools/*.test.js",
+    "test": "npm run build && node --enable-source-maps --test --test-reporter=spec --test-reporter-destination=stdout --test-reporter=@reporters/github --test-reporter-destination=stdout \"dist/**/*.test.js\"",
     "verify:oauth": "npm run build && node scripts/verify-oauth-session.mjs",
     "verify:security": "npm run build && node scripts/verify-security.mjs",
     "cleanup:tokens": "npm run build && node scripts/cleanup-tokens.mjs",

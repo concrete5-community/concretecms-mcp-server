@@ -90,6 +90,9 @@ export const oauthStartPath = prefixedPath('/oauth/start', 'OAUTH_START_PATH', p
 export const oauthStatusPath = prefixedPath('/oauth/status', 'OAUTH_STATUS_PATH', pathPrefix)
 export const oauthRevokePath = prefixedPath('/oauth/revoke', 'OAUTH_REVOKE_PATH', pathPrefix)
 export const healthPath = prefixedPath('/health', 'HEALTH_PATH', pathPrefix)
+const adminPathValue = prefixedPath('/admin', 'ADMIN_PATH', pathPrefix)
+// Empty when the page is disabled
+export const adminPath = /^\s*(false|no|off|0)\s*$/i.test(adminPathValue) ? '' : adminPathValue
 
 export const stdioUserKey = optionalEnv('CONCRETE_USER_ID', 'local')
 

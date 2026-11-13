@@ -136,9 +136,14 @@ Or delete the user's token files on the server and restart if needed.
 | `/oauth/revoke`   | `MCP_API_KEY` required                   |
 | `/oauth/callback` | Public (CMS redirect; protected by PKCE) |
 | `/health`         | Public                                   |
+| `/admin`          | Public (the page asks for `MCP_API_KEY`) |
 | `/mcp`            | `MCP_API_KEY` + user context required    |
 
 Rate limiting applies to OAuth routes (10 requests/minute per IP by default).
+
+`/admin` is a page to authorize the users from a browser: it contains no secrets, it does not save the key typed in it, and it calls only the routes above.
+Expose it only when the connector has its own (sub)domain: on the domain of the Concrete CMS site, any script of the site could read the key.
+To be sure the page is never served, set `ADMIN_PATH=false`.
 
 ## Token refresh
 
