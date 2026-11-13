@@ -133,8 +133,7 @@ curl -s -H "Authorization: Bearer $MCP_API_KEY" \
 `/oauth/start` only handles `GET`. Do not use `curl -I` (HEAD) — it will not reach the handler.
 
 ```bash
-curl -s -D - -o /dev/null \
-  -H "Authorization: Bearer $MCP_API_KEY" \
+curl -s -D - -H "Authorization: Bearer $MCP_API_KEY" \
   "$MCP_SERVER_URL/oauth/start?user_id=42"
 ```
 

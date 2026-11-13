@@ -105,7 +105,7 @@ curl -H "Authorization: Bearer $MCP_API_KEY" \
 **Start OAuth for a user** (simulates a backend proxy — expect `state=` in `Location`):
 
 ```bash
-curl -s -D - -o /dev/null -H "Authorization: Bearer $MCP_API_KEY" \
+curl -s -D - -H "Authorization: Bearer $MCP_API_KEY" \
   "http://127.0.0.1:3000/oauth/start?user_id=42"
 ```
 

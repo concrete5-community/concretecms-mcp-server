@@ -368,13 +368,15 @@ You need:
 To authorize a user:
 
 ```bash
-curl -s -D - -o /dev/null -H "Authorization: Bearer $MCP_API_KEY" \
+curl -s -D - -H "Authorization: Bearer $MCP_API_KEY" \
   "https://mcp.example.com/oauth/start?user_id=42"
 ```
 
 The answer contains a `Location` line with an address.
 The person to authorize must open it in a browser within 10 minutes, sign in to Concrete CMS, and approve the scopes.
-If another sign-in is already in progress for that user, the answer is a `409` error.
+
+If the answer is a `409` error, another sign-in is already in progress for that user: the address of the previous answer is still valid.
+If you no longer have it, run the command again when the 10 minutes are over, or right after restarting the connector.
 
 To check if a user is authorized:
 
