@@ -109,11 +109,18 @@ test('a notification is accepted without an answer', async () => {
   assert.equal(await response.text(), '')
 })
 
-test('a request of an unknown session is refused', async () => {
+test('a request of an unknown session is answered', async () => {
   const response = await post({ jsonrpc: '2.0', id: 3, method: 'tools/list' }, 'unknown')
 
-  assert.equal(response.status, 400)
+  assert.equal(response.status, 200)
   assert.equal(((await response.json()) as Json).id, 3)
+})
+
+test('a request without a session is answered', async () => {
+  const response = await post({ jsonrpc: '2.0', id: 4, method: 'tools/list' })
+
+  assert.equal(response.status, 200)
+  assert.equal(((await response.json()) as Json).id, 4)
 })
 
 test('a cancellation names the request as the server knows it', async () => {
@@ -156,4 +163,100 @@ test('an answer nobody waits for is not sent to the other sessions', async () =>
   assert.equal(outcome, 'silent')
   abort.abort()
   await stream
+})
+
+// A transport of its own, to count its sessions: an hour without being used makes a session idle
+async function withSessions(
+  run: (sessions: {
+    endpoint: string
+    count: () => Promise<number>
+    hoursLater: (hours: number) => void
+  }) => Promise<void>
+): Promise<void> {
+  const ownServer = createServer()
+  const ownTransport = new PostAnsweringHttpTransport(0, '127.0.0.1', '/mcp', ownServer)
+  ownTransport.onmessage = (message) => {
+    const { id } = message as Json
+    if (id !== undefined) {
+      void ownTransport.send({ jsonrpc: '2.0', id, result: {} } as JSONRPCMessage)
+    }
+  }
+  await new Promise<void>((resolve) => ownServer.listen(0, '127.0.0.1', resolve))
+  const origin = `http://127.0.0.1:${(ownServer.address() as AddressInfo).port}`
+  try {
+    await run({
+      endpoint: `${origin}/mcp`,
+      count: async () => ((await (await fetch(`${origin}/health`)).json()) as Json).activeSessions,
+      hoursLater: (hours) => ownTransport.forgetIdleSessions(Date.now() + hours * 3_600_000),
+    })
+  } finally {
+    await ownTransport.close()
+    ownServer.closeAllConnections()
+    ownServer.close()
+  }
+}
+
+function initialize(url: string): Promise<Response> {
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 0, method: 'initialize', params: {} }),
+  })
+}
+
+// The stream answers only when the server writes to it: give the server the time to register it
+async function openStream(url: string, sessionId: string): Promise<AbortController> {
+  const abort = new AbortController()
+  fetch(url, { headers: { 'Mcp-Session-Id': sessionId }, signal: abort.signal }).catch(() => {})
+  await new Promise((resolve) => setTimeout(resolve, 50))
+  return abort
+}
+
+test('a session that is not used is forgotten', async () => {
+  await withSessions(async ({ endpoint: url, count, hoursLater }) => {
+    await (await initialize(url)).text()
+    assert.equal(await count(), 1)
+
+    hoursLater(0.5)
+    assert.equal(await count(), 1)
+
+    hoursLater(2)
+    assert.equal(await count(), 0)
+  })
+})
+
+test('a session with an open stream is kept, until the stream is closed', async () => {
+  await withSessions(async ({ endpoint: url, count, hoursLater }) => {
+    const response = await initialize(url)
+    await response.text()
+    const stream = await openStream(url, response.headers.get('mcp-session-id') ?? '')
+
+    hoursLater(2)
+    assert.equal(await count(), 1)
+
+    stream.abort()
+    await new Promise((resolve) => setTimeout(resolve, 50))
+    hoursLater(2.5)
+    assert.equal(await count(), 1)
+    hoursLater(4)
+    assert.equal(await count(), 0)
+  })
+})
+
+test('a stream can be opened for a session that the server forgot', async () => {
+  await withSessions(async ({ endpoint: url, count }) => {
+    const stream = await openStream(url, 'session-of-before-the-restart')
+
+    assert.equal(await count(), 1)
+    stream.abort()
+  })
+})
+
+test('a stream needs a session', async () => {
+  await withSessions(async ({ endpoint: url, count }) => {
+    const response = await fetch(url)
+
+    assert.equal(response.status, 400)
+    assert.equal(await count(), 0)
+  })
 })
