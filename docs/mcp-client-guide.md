@@ -99,6 +99,8 @@ Accept: application/json, text/event-stream
 
 Requests without `Authorization` return `401`. Requests without `X-Concrete-User-Id` return `400`.
 
+If your client can only send headers with well-known names, use `X-Account-Id` instead of `X-Concrete-User-Id`: the connector accepts both names.
+
 ### MCP session sequence
 
 1. `initialize` — negotiate protocol version and capabilities

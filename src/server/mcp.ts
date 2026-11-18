@@ -2,7 +2,6 @@ import { log } from '../log.js'
 import {
   OpenAPIServer,
   AuthProvider,
-  StreamableHttpServerTransport,
   OpenAPIMCPServerConfig,
   ToolsManager,
   type ExtraToolDefinition,
@@ -37,6 +36,7 @@ import {
   type UnavailableTool,
 } from '../tools/scopeFilter.js'
 import { redactError } from '../utils/redact.js'
+import { PostAnsweringHttpTransport } from './httpTransport.js'
 
 export interface McpServerOptions {
   transport?: 'stdio' | 'http'
@@ -144,12 +144,11 @@ export async function startMcpServer(
       throw new Error('HTTP transport requires a shared HTTP server instance')
     }
 
-    const httpTransport = new StreamableHttpServerTransport(
+    const httpTransport = new PostAnsweringHttpTransport(
       httpPort,
       httpHost,
       mcpEndpointPath,
-      options.httpServer,
-      false
+      options.httpServer
     )
 
     await openApiServer.start(httpTransport)
