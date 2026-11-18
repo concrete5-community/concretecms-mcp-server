@@ -108,6 +108,9 @@ If your client can only send headers with well-known names, use `X-Account-Id` i
 3. `tools/list` — discover available CMS tools
 4. `tools/call` — execute a tool during agent conversation
 
+`initialize` returns an `Mcp-Session-Id` header.
+The connector does not need it back: it also answers the requests of a session it does not know, for example after it restarted.
+
 ### Example: health check
 
 ```bash

@@ -4,6 +4,10 @@ import { StreamableHttpServerTransport } from '@ivotoby/openapi-mcp-server'
 import type { JSONRPCMessage, RequestId } from '@modelcontextprotocol/sdk/types.js'
 
 const MAX_BODY_SIZE = 4 * 1024 * 1024
+const SESSION_IDLE_MS = 60 * 60 * 1000
+const SESSION_SWEEP_MS = 10 * 60 * 1000
+// The MCP specification wants visible ASCII characters
+const SESSION_ID = /^[!-~]{1,128}$/
 
 type Session = {
   messageHandler: (message: JSONRPCMessage) => void
@@ -16,6 +20,7 @@ type Session = {
 type LibraryInternals = {
   sessions: Map<string, Session>
   handlePostRequest: (req: IncomingMessage, res: ServerResponse) => void
+  handleGetRequest: (req: IncomingMessage, res: ServerResponse) => void
 }
 
 type WaitingRequest = {
@@ -57,27 +62,75 @@ function sendError(
  * (for example the custom connectors of Claude): they would wait forever.
  *
  * This transport answers every request in the response of its own POST, as the MCP specification says.
+ *
+ * The sessions are optional. The connector keeps nothing in them (the user comes with every request):
+ * they only tell which GET streams are open. So a request of an unknown session is accepted, for example
+ * after the connector restarted, and the sessions that are not used are forgotten.
  */
 export class PostAnsweringHttpTransport extends StreamableHttpServerTransport {
   // The key is an ID of ours: the IDs chosen by the clients are not unique across the sessions
   private readonly waitingRequests = new Map<string, WaitingRequest>()
+  private readonly sessionLastUsed = new Map<string, number>()
+  private readonly sessionSweeper: NodeJS.Timeout
 
   constructor(
     port: number,
     host: string,
     endpointPath: string,
     server: Server,
-    private readonly runInRequestContext: RequestContextRunner = (_req, fn) => fn()
+    private readonly runInRequestContext: RequestContextRunner = (_req, fn) => fn(),
+    private readonly sessionIdleMs = SESSION_IDLE_MS
   ) {
     super(port, host, endpointPath, server, false)
 
     const internals = this.libraryInternals()
-    if (!(internals.sessions instanceof Map) || typeof internals.handlePostRequest !== 'function') {
+    const openStream = internals.handleGetRequest
+    if (
+      !(internals.sessions instanceof Map) ||
+      typeof internals.handlePostRequest !== 'function' ||
+      typeof openStream !== 'function'
+    ) {
       throw new Error(
         'The HTTP transport of @ivotoby/openapi-mcp-server changed: the connector cannot answer the requests anymore'
       )
     }
     internals.handlePostRequest = (req, res) => this.readMessage(req, res)
+    internals.handleGetRequest = (req, res) => {
+      const sessionId = req.headers['mcp-session-id']
+      if (typeof sessionId === 'string' && SESSION_ID.test(sessionId)) {
+        this.useSession(sessionId)
+      }
+      openStream.call(this, req, res)
+    }
+
+    this.sessionSweeper = setInterval(() => this.forgetIdleSessions(), SESSION_SWEEP_MS)
+    this.sessionSweeper.unref()
+  }
+
+  override close(): Promise<void> {
+    clearInterval(this.sessionSweeper)
+    return super.close()
+  }
+
+  /** Forget the sessions that have no open stream and no pending request, and that were not used lately. */
+  forgetIdleSessions(now = Date.now()): void {
+    const sessions = this.libraryInternals().sessions
+    const busy = new Set([...this.waitingRequests.values()].map((waiting) => waiting.sessionId))
+
+    for (const [sessionId, session] of sessions) {
+      if (session.activeResponses.size > 0 || busy.has(sessionId)) {
+        this.sessionLastUsed.set(sessionId, now)
+      } else if (now - (this.sessionLastUsed.get(sessionId) ?? now) >= this.sessionIdleMs) {
+        sessions.delete(sessionId)
+      } else if (!this.sessionLastUsed.has(sessionId)) {
+        this.sessionLastUsed.set(sessionId, now)
+      }
+    }
+    for (const sessionId of this.sessionLastUsed.keys()) {
+      if (!sessions.has(sessionId)) {
+        this.sessionLastUsed.delete(sessionId)
+      }
+    }
   }
 
   override send(message: JSONRPCMessage): Promise<void> {
@@ -100,6 +153,20 @@ export class PostAnsweringHttpTransport extends StreamableHttpServerTransport {
 
   private libraryInternals(): LibraryInternals {
     return this as unknown as LibraryInternals
+  }
+
+  /** Remember that a session is in use, creating it when it is not known (anymore). */
+  private useSession(sessionId: string): void {
+    const sessions = this.libraryInternals().sessions
+    if (!sessions.has(sessionId)) {
+      sessions.set(sessionId, {
+        messageHandler: (message) => this.onmessage?.(message),
+        activeResponses: new Set(),
+        initialized: true,
+        pendingRequests: new Set(),
+      })
+    }
+    this.sessionLastUsed.set(sessionId, Date.now())
   }
 
   private readMessage(req: IncomingMessage, res: ServerResponse): void {
@@ -149,28 +216,16 @@ export class PostAnsweringHttpTransport extends StreamableHttpServerTransport {
       return
     }
 
-    const sessions = this.libraryInternals().sessions
     const isRequest = typeof message.method === 'string' && isRequestId(message.id)
     const headers: Record<string, string> = {}
-    let sessionId = req.headers['mcp-session-id']
+    const sessionHeader = req.headers['mcp-session-id']
+    let sessionId = typeof sessionHeader === 'string' ? sessionHeader : ''
     if (isRequest && message.method === 'initialize') {
       sessionId = randomUUID()
-      sessions.set(sessionId, {
-        messageHandler: handler,
-        activeResponses: new Set(),
-        initialized: true,
-        pendingRequests: new Set(),
-      })
+      this.useSession(sessionId)
       headers['Mcp-Session-Id'] = sessionId
-    } else if (typeof sessionId !== 'string' || !sessions.has(sessionId)) {
-      sendError(
-        res,
-        400,
-        -32000,
-        'Invalid session. A valid Mcp-Session-Id header is required.',
-        message.id
-      )
-      return
+    } else if (this.libraryInternals().sessions.has(sessionId)) {
+      this.useSession(sessionId)
     }
 
     if (!isRequest) {
@@ -194,7 +249,12 @@ export class PostAnsweringHttpTransport extends StreamableHttpServerTransport {
 
   /** A client cancels a request by the ID it chose: the server knows that request by our ID. */
   private withOurRequestId(message: JsonObject, sessionId: string): JsonObject {
-    if (message.method !== 'notifications/cancelled' || !isJsonObject(message.params)) {
+    // Without a session, the requests of different clients cannot be told apart
+    if (
+      !sessionId ||
+      message.method !== 'notifications/cancelled' ||
+      !isJsonObject(message.params)
+    ) {
       return message
     }
     for (const [ourId, waiting] of this.waitingRequests) {
