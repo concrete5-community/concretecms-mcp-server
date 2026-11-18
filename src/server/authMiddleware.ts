@@ -13,6 +13,8 @@ import { setRequestUserId } from './userContext.js'
 import { sendJson } from './httpResponse.js'
 
 const USER_ID_HEADER = 'x-concrete-user-id'
+// For the clients that can only send headers with well-known names, like the custom connectors of Claude
+const USER_ID_FALLBACK_HEADER = 'x-account-id'
 const RATE_LIMIT_WINDOW_MS = 60_000
 const RATE_LIMIT_MAX_REQUESTS = 10
 
@@ -80,15 +82,18 @@ function isRateLimited(key: string): boolean {
   return false
 }
 
+function userIdFromHeader(req: IncomingMessage, name: string): number | null {
+  const value = req.headers[name]
+  return parsePositiveUserId(Array.isArray(value) ? value[0] : value)
+}
+
 function resolveUserId(req: IncomingMessage, url: URL, boundUserId: number | null): number | null {
   if (boundUserId !== null) {
     return boundUserId
   }
 
-  const headerValue = req.headers[USER_ID_HEADER]
-  const headerUserId = parsePositiveUserId(
-    Array.isArray(headerValue) ? headerValue[0] : headerValue
-  )
+  const headerUserId =
+    userIdFromHeader(req, USER_ID_HEADER) ?? userIdFromHeader(req, USER_ID_FALLBACK_HEADER)
   if (headerUserId) {
     return headerUserId
   }

@@ -11,13 +11,46 @@ If you are building your own application, see the [Developer guide](mcp-client-g
 Ask who manages the connector for:
 
 - the address of the connector for the AI agents, for example `https://mcp.example.com/mcp`
-- the key to use
+- the key for the AI agents: the one shared by all the users (the `MCP_API_KEY` of the connector), or your personal key
 - your user ID in Concrete CMS (you do not need it if you received a personal key)
+
+If you manage the connector yourself, see [Connect the AI agents](remote-server.md#connect-the-ai-agents).
 
 You must also be authorized to use the connector: see [Authorize the users](remote-server.md#authorize-the-users).
 Until then your AI agent can connect, but its requests fail.
 
-## Claude Desktop
+## Claude
+
+You can connect Claude in two ways: with a custom connector, or with the JSON configuration file of Claude Desktop.
+
+### Custom connector
+
+A custom connector is saved in your Claude account, and it needs nothing installed on your computer.
+
+Claude reaches it from the servers of Anthropic, not from your computer: if the access to the connector is restricted, who manages it must [let them in](remote-server.md#let-claude-reach-the-connector).
+
+1. Open **Settings → Customize → Connectors** (the names may be different in your version).
+2. Click **Add**, then **Add custom connector**.
+3. Fill in the name (for example the one of your site) and the address of the connector, for example `https://mcp.example.com/mcp`.
+   Claude checks the connector, then it shows its settings.
+4. Under **Authentication**, choose **No sign-in**.
+   Claude suggests **Sign in now**, but the connector uses a key instead.
+5. Under **Request headers**, click **Add header** and add these headers, choosing their names from the list:
+
+   | Name            | Value                                                |
+   | --------------- | ---------------------------------------------------- |
+   | `authorization` | `Bearer your-key`                                    |
+   | `x-account-id`  | your user ID (not needed if you have a personal key) |
+
+   Replace `your-key` with the key for the AI agents, keeping the word `Bearer` and the space before the key.
+
+   Claude accepts only the header names of its list: this is why your user ID goes in `x-account-id` instead of `X-Concrete-User-Id`.
+
+6. Click **Add**.
+
+Claude saves the key in your account and it never shows it again: keep a copy of it.
+
+### JSON configuration file
 
 The JSON configuration file of Claude Desktop can only start programs on your computer.
 To reach a remote connector it needs the [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge, which requires [Node.js](https://nodejs.org/en/download) on your computer.
@@ -79,11 +112,14 @@ Configure it with:
 - the header `Authorization: Bearer <key>`
 - the header `X-Concrete-User-Id: <your user ID>` (not needed with a personal key)
 
+If your AI agent cannot send headers with custom names, call the second header `X-Account-Id`: the connector accepts both names.
+
 ## Troubleshooting
 
 | Problem                                        | Likely cause                                       | What to do                                                                                              |
 | ---------------------------------------------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
 | The AI agent cannot connect                    | Wrong address, or connector not reachable          | Check the address (it usually ends with `/mcp`), and that the connector is reachable from your computer |
+| Claude cannot check the custom connector       | The servers of Anthropic cannot reach it           | Ask who manages the connector to [let them in](remote-server.md#let-claude-reach-the-connector)         |
 | `401 Unauthorized`                             | Missing or wrong key                               | Check the key                                                                                           |
 | `400`, missing user context                    | Missing user ID, and the key is not a personal one | Add the `X-Concrete-User-Id` header, or ask for a personal key                                          |
 | It connects, but the requests fail             | You are not authorized yet                         | Ask to be authorized: see [Authorize the users](remote-server.md#authorize-the-users)                   |

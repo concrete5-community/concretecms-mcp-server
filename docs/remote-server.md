@@ -459,7 +459,7 @@ Every AI agent needs:
 
 How to configure them depends on the AI agent:
 
-- AI agents running on a computer (for example Claude Desktop or ChatGPT): see [Connect an AI agent on your computer to a remote connector](local-clients.md)
+- AI agents of the users (for example Claude or ChatGPT): see [Connect an AI agent on your computer to a remote connector](local-clients.md)
 - your own application or AI agent: see the [Developer guide](mcp-client-guide.md)
 
 Once an AI agent is connected, ask it to "check the connection to my Concrete CMS site": it tells what is wrong in the configuration and how to fix it, even before the user is authorized (see [Connection check](../README.md#connection-check)).
@@ -470,6 +470,29 @@ For developers: the connector uses the [Streamable HTTP](https://modelcontextpro
 Authorization: Bearer <MCP_API_KEY>
 X-Concrete-User-Id: <cms_user_id>
 ```
+
+The connector accepts `X-Account-Id` as another name for `X-Concrete-User-Id`, for the AI agents that can only send headers with well-known names (like the custom connectors of Claude).
+
+### Let Claude reach the connector
+
+The custom connectors of Claude do not connect from the computer of the user: they connect from the servers of Anthropic.
+
+If you restrict the access to the address for the AI agents (for example by IP address), allow the [outbound IP addresses of Anthropic](https://platform.claude.com/docs/en/api/ip-addresses) too.
+For example, with nginx:
+
+```nginx
+location = /mcp {
+    # The outbound IP addresses of Anthropic: check the page above, they may change
+    allow 160.79.104.0/21;
+    allow 153.61.208.0/20;
+    deny all;
+    # ...
+}
+```
+
+These addresses are the same for everybody using Claude: the key remains what protects the connector.
+
+The Concrete CMS site does not need to be reachable from them: only the connector calls it.
 
 ## Several Concrete CMS sites
 

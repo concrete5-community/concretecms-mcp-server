@@ -101,6 +101,8 @@ Authorization: Bearer <MCP_API_KEY>
 X-Concrete-User-Id: <cms_user_id>
 ```
 
+`X-Account-Id` is accepted as another name for `X-Concrete-User-Id`: when both are sent, `X-Concrete-User-Id` is used.
+
 If using `MCP_API_KEYS` with a user-bound key, the `X-Concrete-User-Id` header is optional:
 
 ```json

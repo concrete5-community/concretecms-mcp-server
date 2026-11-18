@@ -228,7 +228,23 @@ try {
     { Authorization: `Bearer ${mcpApiKey}`, 'Content-Type': 'application/json' },
     'POST'
   )
-  assert(noUser.status === 400, '/mcp returns 400 without X-Concrete-User-Id')
+  assert(
+    noUser.status === 400 && noUser.body.includes('user context'),
+    '/mcp returns 400 without X-Concrete-User-Id'
+  )
+
+  for (const header of ['X-Concrete-User-Id', 'X-Account-Id']) {
+    const withUser = await request(
+      '/mcp',
+      {
+        Authorization: `Bearer ${mcpApiKey}`,
+        'Content-Type': 'application/json',
+        [header]: String(SAMPLE_USER_ID),
+      },
+      'POST'
+    )
+    assert(!withUser.body.includes('user context'), `/mcp reads the user ID from ${header}`)
+  }
 
   const health = await request('/health')
   assert(health.status === 200, '/health is public')
