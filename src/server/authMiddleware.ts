@@ -137,9 +137,9 @@ function handleProtectedRoute(req: IncomingMessage, res: ServerResponse, url: UR
       sendJson(res, 400, { error: 'Missing or invalid user context' })
       return true
     }
-    setRequestUserId(String(userId))
+    setRequestUserId(req, String(userId))
   } else if (userId) {
-    setRequestUserId(String(userId))
+    setRequestUserId(req, String(userId))
   }
 
   return false
