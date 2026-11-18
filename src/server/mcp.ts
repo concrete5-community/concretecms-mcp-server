@@ -37,6 +37,7 @@ import {
 } from '../tools/scopeFilter.js'
 import { redactError } from '../utils/redact.js'
 import { PostAnsweringHttpTransport } from './httpTransport.js'
+import { runAsRequestUser } from './userContext.js'
 
 export interface McpServerOptions {
   transport?: 'stdio' | 'http'
@@ -148,7 +149,8 @@ export async function startMcpServer(
       httpPort,
       httpHost,
       mcpEndpointPath,
-      options.httpServer
+      options.httpServer,
+      runAsRequestUser
     )
 
     await openApiServer.start(httpTransport)

@@ -27,6 +27,9 @@ type WaitingRequest = {
 
 type JsonObject = Record<string, unknown>
 
+/** Runs the code that handles a request in the context of that request (for example its user). */
+export type RequestContextRunner = (req: IncomingMessage, fn: () => void) => void
+
 function isJsonObject(value: unknown): value is JsonObject {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -59,7 +62,13 @@ export class PostAnsweringHttpTransport extends StreamableHttpServerTransport {
   // The key is an ID of ours: the IDs chosen by the clients are not unique across the sessions
   private readonly waitingRequests = new Map<string, WaitingRequest>()
 
-  constructor(port: number, host: string, endpointPath: string, server: Server) {
+  constructor(
+    port: number,
+    host: string,
+    endpointPath: string,
+    server: Server,
+    private readonly runInRequestContext: RequestContextRunner = (_req, fn) => fn()
+  ) {
     super(port, host, endpointPath, server, false)
 
     const internals = this.libraryInternals()
@@ -165,7 +174,8 @@ export class PostAnsweringHttpTransport extends StreamableHttpServerTransport {
     }
 
     if (!isRequest) {
-      handler(this.withOurRequestId(message, sessionId) as JSONRPCMessage)
+      const notification = this.withOurRequestId(message, sessionId) as JSONRPCMessage
+      this.runInRequestContext(req, () => handler(notification))
       res.writeHead(202)
       res.end()
       return
@@ -179,7 +189,7 @@ export class PostAnsweringHttpTransport extends StreamableHttpServerTransport {
       headers,
     })
     res.on('close', () => this.waitingRequests.delete(ourId))
-    handler({ ...message, id: ourId } as JSONRPCMessage)
+    this.runInRequestContext(req, () => handler({ ...message, id: ourId } as JSONRPCMessage))
   }
 
   /** A client cancels a request by the ID it chose: the server knows that request by our ID. */
