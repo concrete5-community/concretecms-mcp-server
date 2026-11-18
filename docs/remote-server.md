@@ -238,7 +238,7 @@ location = /mcp {
     proxy_pass http://127.0.0.1:3000;
     proxy_http_version 1.1;
     proxy_buffering off;
-    # The AI agents keep a connection open to receive the answers: do not close it when it is idle
+    # Some requests take long to answer, and some AI agents keep an idle connection open: do not close them
     proxy_read_timeout 1h;
 }
 
