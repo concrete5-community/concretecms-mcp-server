@@ -2,7 +2,11 @@ import { log } from '../log.js'
 import * as client from 'openid-client'
 import { config } from './oidc.js'
 import { loadTokens, needsTokenRefresh, saveTokens } from '../tokenStore.js'
-import { redactError } from '../utils/redact.js'
+import {
+  AuthorizationRefusedError,
+  describeTokenError,
+  isRefusedRefreshToken,
+} from './tokenRefreshError.js'
 
 export type StoredSessionTokens = {
   access_token: string
@@ -66,7 +70,10 @@ export class UserTokenSession {
       try {
         await this.refreshAccessToken()
         return true
-      } catch {
+      } catch (refreshError) {
+        if (refreshError instanceof AuthorizationRefusedError) {
+          throw refreshError
+        }
         log('Failed to refresh token, re-authentication required')
         throw new Error('Not authenticated for this session')
       }
@@ -109,8 +116,8 @@ export class UserTokenSession {
 
       log(`Access token refreshed for user ${this.userId}`)
     } catch (error) {
-      log(`Token refresh failed for user ${this.userId}: ${redactError(error)}`)
-      throw error
+      log(`Token refresh failed for user ${this.userId}: ${describeTokenError(error)}`)
+      throw isRefusedRefreshToken(error) ? new AuthorizationRefusedError() : error
     }
   }
 
